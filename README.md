@@ -1,6 +1,5 @@
 # SKYSTRIKER-BRAVO
 ### High-Mobility Area Air Defense System
-**VAJRAPRAHAAR VAJRAPRATIJANA**
 
 ---
 
