@@ -28,7 +28,7 @@ html,body{
 #scale-wrap{width:1200px;transform-origin:top center;}
 
 .panel{background:#2a2a2a;border:3px solid #555;border-radius:8px;padding:6px;
-  font-family:'Courier New',monospace;color:#0f0;width:1200px;margin:10px auto 0 auto;}
+  font-family:'Courier New',monospace;color:#0f0;width:1200px;margin:0 auto;}
 .pi{background:#222;border:2px solid #444;border-radius:4px;padding:5px;}
 .screen-box{background:#000;border:3px solid #444;position:relative;overflow:hidden;}
 .slbl{position:absolute;bottom:3px;left:3px;font-size:9px;color:#0f0;z-index:2;pointer-events:none;}
@@ -193,6 +193,16 @@ html,body{
       </div>
     </div>
 
+    <!-- TUTORIAL BUTTON -->
+    <button onclick="document.getElementById('tutorial-section').scrollIntoView({behavior:'smooth'})"
+      style="background:#111;border:1px solid #0a4;color:#0f0;font-family:'Courier New',monospace;
+      font-size:8px;letter-spacing:1px;padding:3px 0;cursor:pointer;text-transform:uppercase;
+      border-radius:3px;width:100%;margin-top:2px;"
+      onmouseover="this.style.background='#0a2018';"
+      onmouseout="this.style.background='#111';">
+      ▼ TUTORIAL ▼
+    </button>
+
   </div>
 
   <!-- ── COL 3: AER ── -->
@@ -274,18 +284,6 @@ html,body{
 </div>
 </div>
 </div><!-- /scale-wrap -->
-
-<!-- TUTORIAL BUTTON -->
-<div style="display:flex;justify-content:center;margin-top:6px;">
-  <button onclick="document.getElementById('tutorial-section').scrollIntoView({behavior:'smooth'})"
-    style="background:#111;border:1px solid #0a4;color:#0f0;font-family:'Courier New',monospace;
-    font-size:8px;letter-spacing:1px;padding:3px 12px;cursor:pointer;text-transform:uppercase;
-    border-radius:3px;"
-    onmouseover="this.style.background='#0a2018';"
-    onmouseout="this.style.background='#111';">
-    ▼ TUTORIAL ▼
-  </button>
-</div>
 
 <!-- TUTORIAL SECTION -->
 <section id="tutorial-section" style="width:min(1080px,96vw);margin:24px auto 60px auto;
@@ -394,11 +392,11 @@ function applyScale(){
   wrap.style.transform='scale(1)';
   wrap.style.marginBottom='0';
   let naturalH=wrap.scrollHeight||wrap.offsetHeight||700;
-  let reservedV=54;
+  let reservedV=10;
   let availH=vh-reservedV;
   let scaleW=vw/1200;
   let scaleH=availH/naturalH;
-  let scale=Math.min(scaleW,scaleH,1);
+  let scale=Math.min(scaleW,scaleH);
   wrap.style.transform='scale('+scale+')';
   wrap.style.transformOrigin='top center';
   let gap=naturalH*(1-scale);
