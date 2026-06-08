@@ -10,72 +10,69 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 
-/* ── PORTRAIT BLOCKER ── */
 #portrait-blocker{
-  display:none;
-  position:fixed;inset:0;z-index:9999;
-  background:#000;
+  display:none;position:fixed;inset:0;z-index:9999;background:#000;
   align-items:center;justify-content:center;flex-direction:column;gap:16px;
   font-family:'Courier New',monospace;color:#0f0;text-align:center;
 }
 #portrait-blocker svg{animation:spin 2s linear infinite;}
 @keyframes spin{to{transform:rotate(90deg);}}
-@media (orientation:portrait) and (max-width:900px){
-  #portrait-blocker{display:flex;}
-}
+@media (orientation:portrait) and (max-width:900px){#portrait-blocker{display:flex;}}
 
 html,body{
-  width:100%;min-height:100%;
-  background:#1a1a1a;
+  width:100%;min-height:100%;background:#1a1a1a;
   display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
-  overflow-y:auto;
-  touch-action:pan-y;
+  overflow-y:auto;touch-action:pan-y;
 }
 
-/* ── SCALE WRAPPER ── */
-#scale-wrap{
-  width:980px;
-  transform-origin:top center;
-  /* JS controls transform and marginBottom dynamically */
-}
+#scale-wrap{width:1200px;transform-origin:top center;}
 
-.panel{background:#2a2a2a;border:3px solid #555;border-radius:8px;padding:7px;font-family:'Courier New',monospace;color:#0f0;width:980px;margin:20px auto 0 auto;}
+.panel{background:#2a2a2a;border:3px solid #555;border-radius:8px;padding:6px;
+  font-family:'Courier New',monospace;color:#0f0;width:1200px;margin:10px auto 0 auto;}
 .pi{background:#222;border:2px solid #444;border-radius:4px;padding:5px;}
 .screen-box{background:#000;border:3px solid #444;position:relative;overflow:hidden;}
 .slbl{position:absolute;bottom:3px;left:3px;font-size:9px;color:#0f0;z-index:2;pointer-events:none;}
 .slblr{position:absolute;bottom:3px;right:3px;font-size:9px;z-index:2;pointer-events:none;}
-.sw-group{background:#111;border:2px solid #444;padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:9px;color:#aaa;text-align:center;text-transform:uppercase;cursor:pointer;}
+
+/* Square screens — enforced via aspect-ratio + width:100% */
+.radar-screen{width:100%;aspect-ratio:1/1;background:#000;border:3px solid #444;
+  position:relative;overflow:hidden;}
+.radar-screen canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+
+.sw-group{background:#111;border:2px solid #444;padding:4px;display:flex;flex-direction:column;
+  align-items:center;gap:2px;font-size:9px;color:#aaa;text-align:center;text-transform:uppercase;cursor:pointer;}
 .tog{width:18px;height:32px;background:#333;border:2px solid #666;border-radius:4px;position:relative;overflow:hidden;}
 .knob{width:14px;height:12px;background:#888;border:1px solid #aaa;border-radius:2px;position:absolute;transition:top 0.1s;}
 .knob.on{top:2px;background:#0c0;}
 .knob.off{top:16px;}
-.rdout{background:#111;border:2px solid #555;padding:3px 5px;}
+.rdout{background:#111;border:2px solid #555;padding:3px 5px;flex:1;}
 .rdlbl{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;}
-.rdval{background:#000;border:1px solid #333;color:#f00;font-size:15px;font-family:'Courier New',monospace;font-weight:bold;padding:2px 5px;text-align:center;letter-spacing:2px;}
-.batt-btn{flex:1;background:#1a1a1a;border:2px solid #555;color:#0f0;font-size:9px;padding:3px 0;cursor:pointer;text-align:center;letter-spacing:1px;}
+.rdval{background:#000;border:1px solid #333;color:#f00;font-size:13px;font-family:'Courier New',monospace;
+  font-weight:bold;padding:2px 4px;text-align:center;letter-spacing:2px;}
+.rdval.cyan{color:#0ff;}
+.batt-btn{background:#1a1a1a;border:2px solid #555;color:#0f0;font-size:9px;padding:3px 0;
+  cursor:pointer;text-align:center;letter-spacing:1px;width:100%;}
 .batt-btn:hover{background:#333;}
-.mc{width:16px;height:16px;background:#0a0;border:1px solid #0f0;border-radius:2px;cursor:pointer;}
+.mc{width:18px;height:18px;background:#0a0;border:1px solid #0f0;border-radius:2px;cursor:pointer;}
 .mc.used{background:#111;border-color:#333;}
-.striped{background:repeating-linear-gradient(45deg,#222 0,#222 8px,#8B6914 8px,#8B6914 16px);height:6px;border:1px solid #666;}
-.status-bar{background:#111;border:2px solid #333;padding:3px 8px;font-size:10px;color:#ff0;text-align:center;letter-spacing:1px;margin-top:4px;}
+.striped{background:repeating-linear-gradient(45deg,#222 0,#222 8px,#8B6914 8px,#8B6914 16px);
+  height:6px;border:1px solid #666;}
+.status-bar{background:#111;border:2px solid #333;padding:3px 8px;font-size:10px;
+  color:#ff0;text-align:center;letter-spacing:1px;margin-top:4px;}
 .beam-opt{display:flex;align-items:center;gap:4px;cursor:pointer;padding:2px 3px;}
 .bdot{width:9px;height:9px;border-radius:50%;border:2px solid #888;flex-shrink:0;}
 .bdot.sel{background:#0f0;border-color:#0f0;}
-.fire-guard{width:38px;height:48px;background:#8B0000;border:3px solid #f00;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
-.fire-inner{width:30px;height:38px;background:#cc0000;border:2px solid #f00;border-radius:3px;}
-.lock-body{background:#8B6914;border:2px solid #a88020;padding:4px 7px;font-size:10px;color:#ffe;font-weight:bold;text-align:center;}
-
-/* touch-friendly tap targets on mobile */
-@media (max-width:900px){
-  .sw-group,.batt-btn,.fire-guard,.lock-body,.beam-opt,.mc{
-    -webkit-tap-highlight-color:rgba(0,255,0,0.15);
-  }
-}
+.fire-guard{width:44px;height:54px;background:#8B0000;border:3px solid #f00;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.fire-inner{width:34px;height:42px;background:#cc0000;border:2px solid #f00;border-radius:3px;}
+.lock-body{background:#8B6914;border:2px solid #a88020;padding:4px 10px;font-size:10px;
+  color:#ffe;font-weight:bold;text-align:center;}
+.sub-bar{background:#111;border:2px solid #333;padding:2px 5px;font-size:8px;color:#0f0;
+  display:flex;justify-content:space-between;}
 </style>
 </head>
 <body>
 
-<!-- PORTRAIT BLOCKER -->
 <div id="portrait-blocker">
   <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
     <rect x="16" y="4" width="24" height="38" rx="3" stroke="#0f0" stroke-width="2.5"/>
@@ -87,131 +84,153 @@ html,body{
 </div>
 
 <div id="scale-wrap">
-<div class="panel" id="mainPanel">
+<div class="panel">
 <div class="pi">
 
-<!-- HEADER BAR -->
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding:4px 6px;background:#111;border:2px solid #444;border-radius:3px;">
-  <div style="font-size:30px;color:#0f0;font-weight:bold;letter-spacing:4px;font-family:'Courier New',monospace;line-height:1;">SKYSTRIKER-BRAVO</div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div id="vp-display" onclick="cycleVajra()" style="font-size:16px;color:#f90;letter-spacing:2px;font-family:'Courier New',monospace;cursor:pointer;text-align:right;user-select:none;" title="Click to cycle">VAJRAPRAHAAR VAJRAPRATIJANA</div>
-    <button id="fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen" style="background:#111;border:2px solid #0a4;color:#0f0;font-family:'Courier New',monospace;font-size:11px;letter-spacing:1px;padding:4px 8px;cursor:pointer;border-radius:3px;white-space:nowrap;flex-shrink:0;">⛶ FULL</button>
+<!-- ═══ HEADER ═══ -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;
+  padding:4px 6px;background:#111;border:2px solid #444;border-radius:3px;">
+  <div style="font-size:26px;color:#0f0;font-weight:bold;letter-spacing:4px;
+    font-family:'Courier New',monospace;line-height:1;">SKYSTRIKER-BRAVO</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div id="vp-display" onclick="cycleVajra()"
+      style="font-size:13px;color:#f90;letter-spacing:2px;font-family:'Courier New',monospace;
+      cursor:pointer;text-align:right;user-select:none;">VAJRAPRAHAAR VAJRAPRATIJANA</div>
+    <button id="fs-btn" onclick="toggleFullscreen()"
+      style="background:#111;border:2px solid #0a4;color:#0f0;font-family:'Courier New',monospace;
+      font-size:10px;letter-spacing:1px;padding:3px 7px;cursor:pointer;border-radius:3px;white-space:nowrap;">
+      ⛶ FULL</button>
   </div>
 </div>
 
-<!-- TOP ROW: TAR | EWR | AER -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:5px;">
+<!-- ═══ THREE COLUMNS ═══ -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
 
-  <!-- LEFT: TAR screen -->
+  <!-- ── COL 1: TAR ── -->
   <div style="display:flex;flex-direction:column;gap:3px;">
-    <div class="screen-box" style="height:240px;" id="tar-screen">
-      <canvas id="tarCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+
+    <!-- Square screen -->
+    <div class="radar-screen" id="tar-screen">
+      <canvas id="tarCanvas"></canvas>
       <div class="slbl">TAR</div>
       <div class="slblr" id="tar-slbl" style="color:#f00;">OFF</div>
     </div>
-    <div style="background:#111;border:2px solid #333;padding:3px 5px;display:flex;justify-content:space-between;font-size:9px;color:#0f0;">
+
+    <!-- sub info bar -->
+    <div class="sub-bar">
       <span>SCANNING</span><span>FPS:666</span><span id="beam-lbl">BEAM:STND</span>
     </div>
-    <div style="background:#111;border:2px solid #666;border-radius:8px;padding:2px 6px;font-size:7px;color:#aaa;display:flex;align-items:center;gap:3px;">
+
+    <!-- S/N pill -->
+    <div style="background:#111;border:2px solid #666;border-radius:8px;padding:2px 6px;
+      font-size:7px;color:#aaa;display:flex;align-items:center;gap:3px;">
       <div style="width:5px;height:5px;border-radius:50%;background:#0a0;flex-shrink:0;"></div>
       <span>SKYSTRIKER-BRAVO S/N:322A1</span>
       <div style="width:5px;height:5px;border-radius:50%;background:#0a0;flex-shrink:0;"></div>
     </div>
+
+    <!-- Three readouts below TAR screen -->
+    <div style="display:flex;gap:3px;">
+      <div class="rdout">
+        <div class="rdlbl">TAR HDG</div>
+        <div class="rdval" id="hdg-d">000.00</div>
+      </div>
+      <div class="rdout">
+        <div class="rdlbl">TAR ELEV</div>
+        <div class="rdval" id="elev-d">00.00</div>
+      </div>
+      <div class="rdout">
+        <div class="rdlbl">ALT ELEV</div>
+        <div class="rdval cyan" id="alt-d">00.00</div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- CENTER: EWR radar -->
+  <!-- ── COL 2: EWR ── -->
   <div style="display:flex;flex-direction:column;gap:3px;">
-    <div class="screen-box" style="height:240px;" id="ewr-screen">
-      <canvas id="ewrCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+
+    <div class="radar-screen" id="ewr-screen">
+      <canvas id="ewrCanvas"></canvas>
       <div class="slbl">EWR</div>
       <div class="slblr" id="ewr-slbl" style="color:#f00;">OFF</div>
     </div>
-    <div style="background:#111;border:2px solid #333;padding:2px 6px;display:flex;gap:10px;font-size:8px;align-items:center;">
+
+    <!-- IFF legend -->
+    <div style="background:#111;border:2px solid #333;padding:2px 6px;display:flex;
+      gap:10px;font-size:8px;align-items:center;">
       <span style="color:#888;">IFF:</span>
       <span style="color:#f55;">▲ HOSTILE</span>
       <span style="color:#5af;">● FRIENDLY</span>
       <span style="color:#ff0;margin-left:auto;">LOCKED: ■</span>
     </div>
-    <button id="mode-btn" onclick="toggleCityMode()" style="background:#111;border:2px solid #0a4;color:#0f0;font-size:8px;font-family:'Courier New',monospace;padding:2px 0;letter-spacing:2px;cursor:pointer;text-transform:uppercase;width:100%;">MODE: CITIES ON</button>
-  </div>
 
-  <!-- RIGHT: AER radar -->
-  <div style="display:flex;flex-direction:column;gap:3px;">
-    <div class="screen-box" style="height:240px;" id="aer-screen">
-      <canvas id="aerCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
-      <div class="slbl">AER</div>
-      <div class="slblr" id="aer-slbl" style="color:#f00;">OFF</div>
-    </div>
-    <div class="screen-box" style="height:52px;background:#000;border:2px solid #0a4;" id="aer-mini-wrap">
-      <canvas id="miniGraphCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
-    </div>
-  </div>
-</div>
+    <!-- City mode toggle -->
+    <button id="mode-btn" onclick="toggleCityMode()"
+      style="background:#111;border:2px solid #0a4;color:#0f0;font-size:8px;
+      font-family:'Courier New',monospace;padding:3px 0;letter-spacing:2px;
+      cursor:pointer;text-transform:uppercase;width:100%;">MODE: CITIES ON</button>
 
-<div class="striped"></div>
-
-<!-- BOTTOM ROW -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px;align-items:start;">
-
-  <!-- LEFT: readouts -->
-  <div style="display:flex;flex-direction:column;gap:4px;">
-    <div class="rdout">
-      <div class="rdlbl">TAR HDG</div>
-      <div class="rdval" id="hdg-d" style="font-size:20px;">000.00</div>
-    </div>
-    <div class="rdout">
-      <div class="rdlbl">TAR ELEV</div>
-      <div class="rdval" id="elev-d" style="font-size:20px;">00.00</div>
-    </div>
-    <div class="rdout">
-      <div class="rdlbl">ALT ELEV</div>
-      <div class="rdval" style="color:#0ff;font-size:20px;" id="alt-d">00.00</div>
-    </div>
-  </div>
-
-  <!-- RIGHT: controls -->
-  <div style="display:flex;flex-direction:column;gap:4px;">
-
-    <!-- ROW 1: three switches -->
+    <!-- Three power switches below the mode button -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
       <div class="sw-group" id="ewr-sw" onclick="toggleSw('ewr')">
         <div id="ewr-off" style="color:#888;font-size:8px;">OFF</div>
         <div class="tog"><div class="knob off" id="ewr-knob"></div></div>
         <div id="ewr-on" style="color:#0a0;font-size:8px;visibility:hidden;">ON</div>
-        <div style="font-size:8px;color:#aaa;">EARLY<br>WARNING<br>RADAR</div>
+        <div style="font-size:7px;color:#aaa;">EARLY<br>WARN<br>RADAR</div>
       </div>
       <div class="sw-group" id="tar-sw" onclick="toggleSw('tar')">
         <div id="tar-off" style="color:#888;font-size:8px;">OFF</div>
         <div class="tog"><div class="knob off" id="tar-knob"></div></div>
         <div id="tar-on" style="color:#0a0;font-size:8px;visibility:hidden;">ON</div>
-        <div style="font-size:8px;color:#aaa;">TARGET<br>ACQ<br>RADAR</div>
+        <div style="font-size:7px;color:#aaa;">TARGET<br>ACQ<br>RADAR</div>
       </div>
       <div class="sw-group" id="aer-sw" onclick="toggleSw('aer')">
         <div id="aer-off" style="color:#888;font-size:8px;">OFF</div>
         <div class="tog"><div class="knob off" id="aer-knob"></div></div>
         <div id="aer-on" style="color:#0a0;font-size:8px;visibility:hidden;">ON</div>
-        <div style="font-size:8px;color:#aaa;">ALT<br>ELEV<br>RADAR</div>
+        <div style="font-size:7px;color:#aaa;">ALT<br>ELEV<br>RADAR</div>
       </div>
     </div>
 
-    <!-- ROW 2: beam + LOCK -->
+  </div>
+
+  <!-- ── COL 3: AER ── -->
+  <div style="display:flex;flex-direction:column;gap:3px;">
+
+    <div class="radar-screen" id="aer-screen">
+      <canvas id="aerCanvas"></canvas>
+      <div class="slbl">AER</div>
+      <div class="slblr" id="aer-slbl" style="color:#f00;">OFF</div>
+    </div>
+
+    <!-- Mini angle graph -->
+    <div class="screen-box" style="height:52px;background:#000;border:2px solid #0a4;" id="aer-mini-wrap">
+      <canvas id="miniGraphCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+    </div>
+
+    <!-- Beam + Lock (moved below mini graph) -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-      <div style="background:#111;border:2px solid #444;padding:4px 5px;display:flex;flex-direction:column;gap:3px;font-size:8px;color:#aaa;text-transform:uppercase;">
+      <div style="background:#111;border:2px solid #444;padding:4px 5px;display:flex;
+        flex-direction:column;gap:3px;font-size:8px;color:#aaa;text-transform:uppercase;">
         <div class="beam-opt" onclick="setBeam('narrow')">
-          <div class="bdot" id="bn"></div><span style="font-size:8px;">NARROW BEAM</span>
+          <div class="bdot" id="bn"></div><span style="font-size:8px;">NARROW</span>
         </div>
         <div class="beam-opt" onclick="setBeam('standard')">
-          <div class="bdot sel" id="bs"></div><span style="font-size:8px;">STANDARD BEAM</span>
+          <div class="bdot sel" id="bs"></div><span style="font-size:8px;">STANDARD</span>
         </div>
       </div>
-      <div style="background:#222;border:2px solid #666;padding:4px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:4px;" id="lock-sw" onclick="toggleLock()">
-        <div style="font-size:9px;color:#888;letter-spacing:2px;text-transform:uppercase;text-align:center;">LOCK</div>
+      <div style="background:#222;border:2px solid #666;padding:4px 6px;display:flex;
+        flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:3px;"
+        id="lock-sw" onclick="toggleLock()">
+        <div style="font-size:8px;color:#888;letter-spacing:2px;text-transform:uppercase;">LOCK</div>
         <div class="lock-body" id="lock-body">LOCK</div>
       </div>
     </div>
 
-    <!-- ROW 3: missiles + fire -->
-    <div style="background:#111;border:2px solid #555;padding:4px;display:flex;align-items:center;gap:8px;">
+    <!-- Missiles + Fire (moved below mini graph) -->
+    <div style="background:#111;border:2px solid #555;padding:4px;display:flex;
+      align-items:center;gap:6px;">
       <div style="display:flex;flex-direction:column;gap:3px;flex:1;">
         <div style="display:flex;align-items:center;gap:6px;">
           <div style="font-size:9px;color:#0f0;letter-spacing:2px;">AGNIBAAN</div>
@@ -227,7 +246,7 @@ html,body{
           <div class="mc" onclick="useMissile(6)"></div>
           <div class="mc" onclick="useMissile(7)"></div>
         </div>
-        <div class="batt-btn" onclick="rearm()" style="text-align:center;width:100%;">REARM</div>
+        <div class="batt-btn" onclick="rearm()">REARM</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
         <div style="font-size:8px;color:#f44;font-weight:bold;letter-spacing:1px;">FIRE</div>
@@ -239,7 +258,7 @@ html,body{
     </div>
 
   </div>
-</div>
+</div><!-- /grid -->
 
 <div class="striped" style="margin-top:5px;"></div>
 <div class="status-bar" id="sbar">SYSTEM STANDBY — EWR AND TAR OFFLINE</div>
@@ -248,18 +267,22 @@ html,body{
 </div>
 </div><!-- /scale-wrap -->
 
-<!-- TUTORIAL BUTTON — outside scale-wrap, always visible -->
-<div id="tut-btn-wrap" style="display:flex;justify-content:center;margin-top:10px;">
+<!-- TUTORIAL BUTTON -->
+<div style="display:flex;justify-content:center;margin-top:6px;">
   <button onclick="document.getElementById('tutorial-section').scrollIntoView({behavior:'smooth'})"
-    style="background:#111;border:2px solid #0a4;color:#0f0;font-family:'Courier New',monospace;font-size:13px;letter-spacing:3px;padding:8px 32px;cursor:pointer;text-transform:uppercase;border-radius:4px;transition:background 0.2s,box-shadow 0.2s;box-shadow:0 0 8px #0a422a;"
-    onmouseover="this.style.background='#0a2018';this.style.boxShadow='0 0 18px #0f0';"
-    onmouseout="this.style.background='#111';this.style.boxShadow='0 0 8px #0a422a';">
-    ▼ &nbsp; TUTORIAL &nbsp; ▼
+    style="background:#111;border:1px solid #0a4;color:#0f0;font-family:'Courier New',monospace;
+    font-size:8px;letter-spacing:1px;padding:3px 12px;cursor:pointer;text-transform:uppercase;
+    border-radius:3px;"
+    onmouseover="this.style.background='#0a2018';"
+    onmouseout="this.style.background='#111';">
+    ▼ TUTORIAL ▼
   </button>
 </div>
 
-<!-- TUTORIAL SECTION — outside scale-wrap -->
-<section id="tutorial-section" style="width:min(980px,96vw);margin:32px auto 60px auto;font-family:'Courier New',monospace;color:#ccc;background:#111;border:2px solid #333;border-radius:8px;padding:32px 36px;line-height:1.7;">
+<!-- TUTORIAL SECTION -->
+<section id="tutorial-section" style="width:min(1080px,96vw);margin:24px auto 60px auto;
+  font-family:'Courier New',monospace;color:#ccc;background:#111;border:2px solid #333;
+  border-radius:8px;padding:28px 32px;line-height:1.7;">
 
   <div style="border-bottom:2px solid #0a4;padding-bottom:12px;margin-bottom:28px;">
     <div style="font-size:22px;color:#0f0;letter-spacing:4px;font-weight:bold;">OPERATOR GUIDE</div>
@@ -267,113 +290,81 @@ html,body{
   </div>
 
   <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">01 &mdash; SYSTEM STARTUP</div>
-    <p style="margin-bottom:8px;">All three radar systems begin in the <span style="color:#f55;">OFF</span> state. You must power them on individually using the toggle switches on the left-side control panel.</p>
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">01 — SYSTEM STARTUP</div>
+    <p style="margin-bottom:8px;">All three radar systems begin in the <span style="color:#f55;">OFF</span> state. Power them on using the toggle switches under the EWR screen.</p>
     <ol style="padding-left:20px;color:#aaa;font-size:13px;">
-      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">EWR</span> switch to bring up the wide-area sweep. Contacts will begin appearing within seconds.</li>
-      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">TAR</span> switch to activate the Target Acquisition Radar.</li>
-      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">AER</span> switch to activate the Altitude Elevation Radar.</li>
+      <li style="margin-bottom:6px;">Flip <span style="color:#0f0;">EWR</span> — wide-area sweep activates.</li>
+      <li style="margin-bottom:6px;">Flip <span style="color:#0f0;">TAR</span> — target acquisition radar activates.</li>
+      <li style="margin-bottom:6px;">Flip <span style="color:#0f0;">AER</span> — altitude elevation radar activates.</li>
     </ol>
-    <p style="margin-top:8px;font-size:12px;color:#666;">All three must be ON for a full engagement solution.</p>
   </div>
 
   <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">02 &mdash; EWR — EARLY WARNING RADAR</div>
-    <p style="margin-bottom:8px;">The EWR provides 360° surveillance. A rotating sweep arm continuously paints contacts on the display.</p>
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">02 — EWR — EARLY WARNING RADAR</div>
+    <p style="margin-bottom:8px;">360° sweep. Contacts appear as the arm paints them.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
       <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
         <div style="color:#f55;font-size:11px;letter-spacing:2px;margin-bottom:6px;">▲ HOSTILE</div>
-        <p style="font-size:12px;color:#999;">Military-class contacts. Move faster and fly at higher altitudes. Prioritise for lock.</p>
+        <p style="font-size:12px;color:#999;">Military contacts. Faster, higher altitude. Prioritise for lock.</p>
       </div>
       <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
         <div style="color:#5af;font-size:11px;letter-spacing:2px;margin-bottom:6px;">● FRIENDLY</div>
-        <p style="font-size:12px;color:#999;">Civilian-class contacts. Slower, lower altitude. Avoid targeting.</p>
+        <p style="font-size:12px;color:#999;">Civilian contacts. Slower, lower altitude. Avoid targeting.</p>
       </div>
-    </div>
-    <p style="margin-top:10px;font-size:12px;color:#777;">Use the <span style="color:#0f0;">MODE</span> button below the EWR screen to toggle city name overlays on or off.</p>
-  </div>
-
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">03 &mdash; TAR — TARGET ACQUISITION RADAR</div>
-    <p style="margin-bottom:10px;">TAR is a narrow-FOV radar. Steer the crosshair by dragging on the TAR screen (touch) or WASD keys (keyboard).</p>
-    <div style="background:#0a0a0a;border:1px solid #222;padding:14px;border-radius:4px;">
-      <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:10px;">BEAM STEERING — KEYBOARD</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;max-width:300px;">
-        <div></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">W<br><span style="font-size:10px;color:#666;">UP</span></div>
-        <div></div><div></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">A<br><span style="font-size:10px;color:#666;">LEFT</span></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">S<br><span style="font-size:10px;color:#666;">DOWN</span></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">D<br><span style="font-size:10px;color:#666;">RIGHT</span></div>
-        <div></div>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:#0f0;">📱 MOBILE: Drag finger on TAR screen to steer beam.</div>
     </div>
   </div>
 
   <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">04 &mdash; AER — ALTITUDE ELEVATION RADAR</div>
-    <p style="margin-bottom:8px;">The AER displays a vertical cross-section. Align the beam to the target's altitude band.</p>
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">03 — TAR — TARGET ACQUISITION RADAR</div>
+    <p style="margin-bottom:10px;">Steer the crosshair by dragging on the TAR screen (touch) or WASD keys (keyboard).</p>
     <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-      <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:8px;">ELEVATION KEYS / TOUCH</div>
-      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-        <div style="background:#1a1a1a;border:1px solid #444;padding:8px 14px;border-radius:3px;color:#0f0;text-align:center;"><span style="font-size:16px;">8</span><br><span style="font-size:10px;color:#666;">RAISE</span></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:8px 14px;border-radius:3px;color:#0f0;text-align:center;"><span style="font-size:16px;">2</span><br><span style="font-size:10px;color:#666;">LOWER</span></div>
-        <div style="font-size:11px;color:#0f0;">📱 MOBILE: Drag finger up/down on AER screen.</div>
-      </div>
+      <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:8px;">KEYS: W=UP  S=DOWN  A=LEFT  D=RIGHT</div>
+      <div style="font-size:11px;color:#0f0;">📱 MOBILE: Drag on TAR screen to steer beam.</div>
     </div>
   </div>
 
   <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">05 &mdash; ACQUIRING A LOCK</div>
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">04 — AER — ALTITUDE ELEVATION RADAR</div>
+    <p style="margin-bottom:8px;">Vertical cross-section. Align beam to target's altitude band.</p>
+    <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
+      <div style="font-size:11px;color:#888;margin-bottom:6px;">KEYS: 8=RAISE  2=LOWER</div>
+      <div style="font-size:11px;color:#0f0;">📱 MOBILE: Drag up/down on AER screen.</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">05 — ACQUIRING A LOCK</div>
     <ol style="padding-left:20px;color:#aaa;font-size:13px;">
-      <li style="margin-bottom:8px;">Power on <span style="color:#0f0;">EWR</span>, <span style="color:#0f0;">TAR</span> and <span style="color:#0f0;">AER</span>.</li>
-      <li style="margin-bottom:8px;">Steer the TAR beam (WASD / drag) until it overlaps a contact on the EWR.</li>
-      <li style="margin-bottom:8px;">Adjust AER elevation (<span style="color:#0f0;">8 / 2</span> or drag) until the marker aligns with the contact's altitude.</li>
-      <li style="margin-bottom:8px;">The status bar will flash <span style="color:#ff0;">TAR+ALT ALIGNED</span>. Press <span style="color:#0f0;">X</span> or tap LOCK to engage.</li>
-      <li style="margin-bottom:8px;">The crosshair turns <span style="color:#ff0;">yellow</span> and tracks the target.</li>
+      <li style="margin-bottom:8px;">Power on all three radars.</li>
+      <li style="margin-bottom:8px;">Steer TAR beam onto a contact visible on EWR.</li>
+      <li style="margin-bottom:8px;">Adjust AER elevation until the marker aligns with the contact's altitude.</li>
+      <li style="margin-bottom:8px;">Status bar flashes <span style="color:#ff0;">TAR+ALT ALIGNED</span>. Tap LOCK or press <span style="color:#0f0;">X</span>.</li>
+      <li style="margin-bottom:8px;">Crosshair turns <span style="color:#ff0;">yellow</span> and tracks the target.</li>
     </ol>
   </div>
 
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">06 &mdash; AGNIBAAN FIRE CONTROL</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-        <div style="color:#0f0;font-size:11px;letter-spacing:2px;margin-bottom:6px;">FIRE — KEY N / TAP FIRE BUTTON</div>
-        <p style="font-size:12px;color:#999;">With target locked, press N or tap the red FIRE button. One round consumed per shot.</p>
-      </div>
-      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-        <div style="color:#f90;font-size:11px;letter-spacing:2px;margin-bottom:6px;">REARM</div>
-        <p style="font-size:12px;color:#999;">Tap REARM to reload all 8 missiles instantly.</p>
-      </div>
-    </div>
-  </div>
-
   <div style="margin-bottom:10px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">07 &mdash; HEADER DISPLAY</div>
-    <p style="margin-bottom:8px;">The <span style="color:#f90;">VAJRAPRAHAAR VAJRAPRATIJANA</span> phrase cycles through operational mottos. Tap it to step through manually.</p>
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">06 — AGNIBAAN FIRE CONTROL</div>
+    <p style="margin-bottom:8px;">8-round loadout under the AER column. With target locked, press <span style="color:#0f0;">N</span> or tap FIRE. Tap REARM to reload all 8.</p>
   </div>
 
-  <div style="border-top:1px solid #222;padding-top:16px;margin-top:10px;font-size:11px;color:#444;letter-spacing:1px;text-align:center;">
+  <div style="border-top:1px solid #222;padding-top:16px;margin-top:10px;font-size:11px;
+    color:#444;letter-spacing:1px;text-align:center;">
     SKYSTRIKER-BRAVO S/N:322A1 &nbsp;|&nbsp; OPERATOR GUIDE &nbsp;|&nbsp; FOR AUTHORISED USE ONLY
   </div>
 
 </section>
-</div><!-- /scale-wrap -->
 
 <script>
-/* ══════════════════════════════════════════════════════════
-   MOBILE SCALING + ORIENTATION
-══════════════════════════════════════════════════════════ */
+/* ── FULLSCREEN ── */
 function toggleFullscreen(){
   let el=document.documentElement;
-  let btn=document.getElementById('fs-btn');
   if(!document.fullscreenElement&&!document.webkitFullscreenElement&&!document.mozFullScreenElement){
     let req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
-    if(req) req.call(el).catch(()=>{});
-  } else {
+    if(req)req.call(el).catch(()=>{});
+  }else{
     let ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
-    if(ex) ex.call(document).catch(()=>{});
+    if(ex)ex.call(document).catch(()=>{});
   }
 }
 function updateFsBtn(){
@@ -388,177 +379,118 @@ document.addEventListener('fullscreenchange',updateFsBtn);
 document.addEventListener('webkitfullscreenchange',updateFsBtn);
 document.addEventListener('mozfullscreenchange',updateFsBtn);
 
+/* ── SCALING ── */
 function applyScale(){
   let vw=window.innerWidth, vh=window.innerHeight;
   let wrap=document.getElementById('scale-wrap');
-
-  // Reset to natural size to measure true height
   wrap.style.transform='scale(1)';
   wrap.style.marginBottom='0';
-  let naturalH=wrap.scrollHeight||wrap.offsetHeight||600;
-
-  // Reserve ~66px for the tutorial button row + body top margin
-  let reservedV=66;
+  let naturalH=wrap.scrollHeight||wrap.offsetHeight||700;
+  // Reserve space for tutorial button (~44px) + small top margin (10px)
+  let reservedV=54;
   let availH=vh-reservedV;
-
-  let scaleW=vw/980;
+  let scaleW=vw/1200;
   let scaleH=availH/naturalH;
-  let scale=Math.min(scaleW, scaleH, 1); // never upscale above 1
-
+  let scale=Math.min(scaleW,scaleH,1);
   wrap.style.transform='scale('+scale+')';
   wrap.style.transformOrigin='top center';
-
-  // Collapse gap caused by CSS scale keeping the original layout box size
   let gap=naturalH*(1-scale);
   wrap.style.marginBottom=(-gap)+'px';
 }
-window.addEventListener('resize', applyScale);
-window.addEventListener('orientationchange', ()=>setTimeout(applyScale,200));
-// Run after layout is fully painted
-document.addEventListener('DOMContentLoaded', ()=>{ applyScale(); setTimeout(applyScale,150); });
-window.addEventListener('load', ()=>setTimeout(applyScale,100));
+window.addEventListener('resize',applyScale);
+window.addEventListener('orientationchange',()=>setTimeout(applyScale,200));
+document.addEventListener('DOMContentLoaded',()=>{applyScale();setTimeout(applyScale,200);});
+window.addEventListener('load',()=>setTimeout(applyScale,100));
 applyScale();
 
-// Try to lock orientation to landscape on supported browsers
-(function tryLockOrientation(){
-  try{
-    if(screen.orientation && screen.orientation.lock){
-      screen.orientation.lock('landscape').catch(()=>{});
-    }
-  }catch(e){}
-})();
+/* ── ORIENTATION LOCK ── */
+(function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}})();
 
-/* ══════════════════════════════════════════════════════════
+/* ════════════════════════════════
    GAME STATE
-══════════════════════════════════════════════════════════ */
+════════════════════════════════ */
 const S={
-  ewrOn:false, tarOn:false, aerOn:false,
-  locked:false, beam:'standard', showLabels:true,
-  showCities:true,
-  tarAz:90, tarEl:0, altEl:0,
+  ewrOn:false,tarOn:false,aerOn:false,
+  locked:false,beam:'standard',showCities:true,
+  tarAz:90,tarEl:0,altEl:0,
   missiles:[true,true,true,true,true,true,true,true],
-  lockTarget:null, ewrSweep:0, keys:{},
-  activemissiles:[], destroyedIds:new Set(),
-  nextId:1
+  lockTarget:null,ewrSweep:0,keys:{},
+  activemissiles:[],destroyedIds:new Set(),nextId:1
 };
 
 const CITIES=[
-  {name:'Valdris',   ax:-0.28, ay:-0.22},
-  {name:'Morthex',   ax: 0.10, ay:-0.06},
-  {name:'Arelion',   ax:-0.30, ay: 0.33},
-  {name:'Strethkar', ax: 0.30, ay: 0.15},
-  {name:'Gorvane',   ax: 0.38, ay:-0.25},
-  {name:'Kelvrath',  ax:-0.55, ay:-0.10},
-  {name:'Durnhal',   ax: 0.52, ay: 0.40},
-  {name:'Tyrevoss',  ax:-0.18, ay: 0.55},
-  {name:'Oxareth',   ax: 0.60, ay:-0.08},
-  {name:'Bryndok',   ax:-0.45, ay:-0.50},
-  {name:'Vaelstrom', ax: 0.15, ay: 0.60},
-  {name:'Horreth',   ax:-0.62, ay: 0.30}
+  {name:'Valdris',ax:-0.28,ay:-0.22},{name:'Morthex',ax:0.10,ay:-0.06},
+  {name:'Arelion',ax:-0.30,ay:0.33},{name:'Strethkar',ax:0.30,ay:0.15},
+  {name:'Gorvane',ax:0.38,ay:-0.25},{name:'Kelvrath',ax:-0.55,ay:-0.10},
+  {name:'Durnhal',ax:0.52,ay:0.40},{name:'Tyrevoss',ax:-0.18,ay:0.55},
+  {name:'Oxareth',ax:0.60,ay:-0.08},{name:'Bryndok',ax:-0.45,ay:-0.50},
+  {name:'Vaelstrom',ax:0.15,ay:0.60},{name:'Horreth',ax:-0.62,ay:0.30}
 ];
-
 const MIL_LABELS=['GORTHEX','VALDRIS','MORTHEX','HELIX-9','STRIKER','WRAITH-2','TALON'];
 const CIV_LABELS=['ARELION AIR','CRESTAVIA 4','VELSTRAAT 7','NORDEX 51','ALTA WINGS','ORBIS 88'];
 
-function randSpeed(type){ return type==='mil' ? 0.00010+Math.random()*0.00006 : 0.00005+Math.random()*0.00004; }
-
+function randSpeed(t){return t==='mil'?0.00010+Math.random()*0.00006:0.00005+Math.random()*0.00004;}
 function spawnAircraft(){
-  let type = Math.random()<0.45 ? 'mil' : 'civ';
-  let entryAngle = Math.random()*Math.PI*2;
-  let x = Math.cos(entryAngle)*1.05;
-  let y = Math.sin(entryAngle)*1.05;
-  let towardCenter = Math.atan2(-y, -x);
-  let hdgRad = towardCenter + (Math.random()-0.5)*1.2;
-  let spd = randSpeed(type);
-  let vx = Math.cos(hdgRad)*spd;
-  let vy = Math.sin(hdgRad)*spd;
-  let hdgDeg = ((Math.atan2(vx, -vy)*180/Math.PI)+360)%360;
-  let milIdx = Math.floor(Math.random()*MIL_LABELS.length);
-  let civIdx = Math.floor(Math.random()*CIV_LABELS.length);
-  let id = (type==='mil'?'F':'C')+S.nextId++;
-  return {
-    id, type, x, y, vx, vy,
-    alt: type==='mil' ? 28+Math.random()*16 : 18+Math.random()*14,
-    altRate: (Math.random()-0.5)*0.002,
-    hdg: hdgDeg,
-    label: type==='mil' ? MIL_LABELS[milIdx] : CIV_LABELS[civIdx],
-    hdgWander: (Math.random()-0.5)*0.00015,
-    born: Date.now()
-  };
+  let type=Math.random()<0.45?'mil':'civ';
+  let ea=Math.random()*Math.PI*2;
+  let x=Math.cos(ea)*1.05,y=Math.sin(ea)*1.05;
+  let tc=Math.atan2(-y,-x),hr=tc+(Math.random()-0.5)*1.2;
+  let spd=randSpeed(type),vx=Math.cos(hr)*spd,vy=Math.sin(hr)*spd;
+  let hdg=((Math.atan2(vx,-vy)*180/Math.PI)+360)%360;
+  let id=(type==='mil'?'F':'C')+S.nextId++;
+  return{id,type,x,y,vx,vy,
+    alt:type==='mil'?28+Math.random()*16:18+Math.random()*14,
+    altRate:(Math.random()-0.5)*0.002,hdg,
+    label:type==='mil'?MIL_LABELS[Math.floor(Math.random()*MIL_LABELS.length)]:CIV_LABELS[Math.floor(Math.random()*CIV_LABELS.length)],
+    hdgWander:(Math.random()-0.5)*0.00015,born:Date.now()};
 }
-
 let TARGETS=[];
 for(let i=0;i<4;i++){
-  let t=spawnAircraft();
-  let r=0.2+Math.random()*0.7;
-  let a=Math.random()*Math.PI*2;
-  t.x=Math.cos(a)*r; t.y=Math.sin(a)*r;
-  TARGETS.push(t);
+  let t=spawnAircraft(),r=0.2+Math.random()*0.7,a=Math.random()*Math.PI*2;
+  t.x=Math.cos(a)*r;t.y=Math.sin(a)*r;TARGETS.push(t);
 }
+let lastSpawn=Date.now(),spawnInterval=18000+Math.random()*12000;
+function liveTargets(){return TARGETS.filter(t=>!S.destroyedIds.has(t.id));}
 
-let lastSpawn=Date.now();
-let spawnInterval=18000+Math.random()*12000;
-
-function liveTargets(){ return TARGETS.filter(t=>!S.destroyedIds.has(t.id)); }
-
-/* ══════════════════════════════════════════════════════════
-   CONTROL FUNCTIONS
-══════════════════════════════════════════════════════════ */
+/* ── CONTROLS ── */
 function toggleSw(w){
-  S[w+'On']=!S[w+'On']; let on=S[w+'On'];
+  S[w+'On']=!S[w+'On'];let on=S[w+'On'];
   document.getElementById(w+'-knob').className='knob '+(on?'on':'off');
   document.getElementById(w+'-off').style.visibility=on?'hidden':'visible';
   document.getElementById(w+'-on').style.visibility=on?'visible':'hidden';
-  if(!S.ewrOn||!S.tarOn){
-    if(S.locked){S.locked=false;S.lockTarget=null;applyLockUI();flash('RADAR OFFLINE — LOCK DISENGAGED');}
-  }
+  if(!S.ewrOn||!S.tarOn){if(S.locked){S.locked=false;S.lockTarget=null;applyLockUI();flash('RADAR OFFLINE — LOCK DISENGAGED');}}
   updateStatus();
 }
-
 function setBeam(m){
   S.beam=m;
   document.getElementById('bn').className='bdot'+(m==='narrow'?' sel':'');
   document.getElementById('bs').className='bdot'+(m==='standard'?' sel':'');
   document.getElementById('beam-lbl').textContent='BEAM:'+(m==='narrow'?'NARW':'STND');
 }
-
 function useMissile(i){S.missiles[i]=!S.missiles[i];updateGrid();}
-
-function rearm(){
-  S.missiles=[true,true,true,true,true,true,true,true];updateGrid();
-  flash('AGNIBAAN REARMED — 8 MISSILES READY');
-}
-
+function rearm(){S.missiles=[true,true,true,true,true,true,true,true];updateGrid();flash('AGNIBAAN REARMED — 8 MISSILES READY');}
 function updateGrid(){
   let cells=document.querySelectorAll('#mg .mc'),n=0;
   cells.forEach((c,i)=>{c.className='mc'+(S.missiles[i]?'':' used');if(S.missiles[i])n++;});
   document.getElementById('mc-count').textContent=n;
 }
-
-function targetAz(t){ return ((Math.atan2(t.y,t.x)*180/Math.PI)+360)%360; }
-function targetDist(t){ return Math.sqrt(t.x*t.x+t.y*t.y); }
-
+function targetAz(t){return((Math.atan2(t.y,t.x)*180/Math.PI)+360)%360;}
+function targetDist(t){return Math.sqrt(t.x*t.x+t.y*t.y);}
 function checkAlign(){
   let azN=((S.tarAz%360)+360)%360;
   for(let t of liveTargets()){
-    let taz=targetAz(t);
-    let d=Math.abs(azN-taz); if(d>180)d=360-d;
-    if(d<12&&Math.abs(S.altEl-t.alt)<3) return t;
+    let taz=targetAz(t),d=Math.abs(azN-taz);if(d>180)d=360-d;
+    if(d<12&&Math.abs(S.altEl-t.alt)<3)return t;
   }
   return null;
 }
-
 function toggleLock(){
   if(!S.tarOn){flash('TAR OFFLINE — CANNOT LOCK');return;}
   if(!S.ewrOn){flash('EWR OFFLINE — CANNOT LOCK');return;}
-  if(!S.locked){
-    let t=checkAlign();
-    if(!t){flash('LOCK FAILED — ALIGN TAR AND ALT ON SAME TARGET');return;}
-    S.locked=true;S.lockTarget=t;
-  }else{S.locked=false;S.lockTarget=null;}
+  if(!S.locked){let t=checkAlign();if(!t){flash('LOCK FAILED — ALIGN TAR AND ALT ON SAME TARGET');return;}S.locked=true;S.lockTarget=t;}
+  else{S.locked=false;S.lockTarget=null;}
   applyLockUI();updateStatus();
 }
-
 function applyLockUI(){
   let lb=document.getElementById('lock-body');
   lb.style.background=S.locked?'#8B0000':'#8B6914';
@@ -566,7 +498,6 @@ function applyLockUI(){
   lb.style.color=S.locked?'#f88':'#ffe';
   lb.textContent=S.locked?'ARMED':'LOCK';
 }
-
 function fireMissile(){
   if(!S.ewrOn||!S.tarOn){flash('RADARS OFFLINE — CANNOT FIRE');return;}
   if(!S.locked){flash('LOCK BEFORE FIRE');return;}
@@ -578,153 +509,64 @@ function fireMissile(){
   fg.style.transform='scale(0.9)';fg.style.background='#f00';
   setTimeout(()=>{fg.style.transform='';fg.style.background='#8B0000';},200);
   let tgt=liveTargets().find(t=>t.id===S.lockTarget.id);
-  if(tgt) S.activemissiles.push({id:'M'+(Date.now()%1000),targetId:tgt.id,progress:0,trail:[],sx:0,sy:0,ex:tgt.x,ey:tgt.y});
+  if(tgt)S.activemissiles.push({id:'M'+(Date.now()%1000),targetId:tgt.id,progress:0,trail:[]});
   flash('MISSILE LAUNCHED AT '+S.lockTarget.id+' ('+S.lockTarget.label+')');
 }
-
 function flash(m){document.getElementById('sbar').textContent=m;}
-
 function toggleCityMode(){
   S.showCities=!S.showCities;
   document.getElementById('mode-btn').textContent='MODE: CITIES '+(S.showCities?'ON':'OFF');
   document.getElementById('mode-btn').style.borderColor=S.showCities?'#0a4':'#555';
   document.getElementById('mode-btn').style.color=S.showCities?'#0f0':'#666';
 }
-
-const VAJRA_LINES=[
-  'VAJRAPRAHAAR VAJRAPRATIJANA',
-  'VAJRAPRAHAARAH VAJRAPRATIGYA',
-  'BHEESHAN BHAIRAVNAADAM',
-  'SHASHTRENA RAKSHITAM RASHTRAM',
-  'PRACHANDAM PRAHAARAM'
-];
+const VAJRA_LINES=['VAJRAPRAHAAR VAJRAPRATIJANA','VAJRAPRAHAARAH VAJRAPRATIGYA','BHEESHAN BHAIRAVNAADAM','SHASHTRENA RAKSHITAM RASHTRAM','PRACHANDAM PRAHAARAM'];
 let vajraIdx=0;
-function cycleVajra(){
-  vajraIdx=(vajraIdx+1)%VAJRA_LINES.length;
-  document.getElementById('vp-display').textContent=VAJRA_LINES[vajraIdx];
-}
-(function initVajra(){
-  let i=0;
-  function step(){
-    document.getElementById('vp-display').textContent=VAJRA_LINES[i];
-    vajraIdx=i; i++;
-    if(i<VAJRA_LINES.length) setTimeout(step,600);
-  }
-  setTimeout(step,400);
-})();
-
+function cycleVajra(){vajraIdx=(vajraIdx+1)%VAJRA_LINES.length;document.getElementById('vp-display').textContent=VAJRA_LINES[vajraIdx];}
+(function(){let i=0;function step(){document.getElementById('vp-display').textContent=VAJRA_LINES[i];vajraIdx=i++;if(i<VAJRA_LINES.length)setTimeout(step,600);}setTimeout(step,400);})();
 function updateStatus(){
-  if(S.locked){flash('TARGET LOCKED: '+S.lockTarget.id+' — PRESS N TO FIRE');return;}
+  if(S.locked){flash('TARGET LOCKED: '+S.lockTarget.id+' — TAP FIRE / PRESS N');return;}
   let al=(S.tarOn&&S.ewrOn)?checkAlign():null;
-  if(al) flash('TAR+ALT ALIGNED ON '+al.id+' ('+al.label+') — TAP LOCK / PRESS X');
-  else if(S.tarOn&&S.ewrOn) flash('EWR+TAR ONLINE — DRAG TAR SCREEN / WASD=TAR  DRAG AER / 8/2=ALT  X=LOCK  N=FIRE');
-  else if(S.tarOn) flash('TAR ONLINE — DRAG TAR SCREEN TO STEER BEAM');
-  else if(S.ewrOn) flash('EWR ONLINE — RADAR SWEEPING');
+  if(al)flash('TAR+ALT ALIGNED ON '+al.id+' ('+al.label+') — TAP LOCK / PRESS X');
+  else if(S.tarOn&&S.ewrOn)flash('EWR+TAR ONLINE — DRAG TAR / WASD | DRAG AER / 8·2 | X=LOCK N=FIRE');
+  else if(S.tarOn)flash('TAR ONLINE — DRAG TAR SCREEN TO STEER');
+  else if(S.ewrOn)flash('EWR ONLINE — SCANNING');
   else flash('SYSTEM STANDBY — EWR AND TAR OFFLINE');
 }
 
-/* ══════════════════════════════════════════════════════════
-   TOUCH CONTROLS — TAR (crosshair drag)
-══════════════════════════════════════════════════════════ */
-(function setupTARTouch(){
-  let tarScreen=document.getElementById('tar-screen');
-  let dragging=false;
-  let lastX=0, lastY=0;
-
-  function getCanvasCoords(e){
-    let rect=tarScreen.getBoundingClientRect();
-    let t=e.touches?e.touches[0]:e;
-    // Account for CSS scaling of the wrapper
-    let scale=parseFloat(document.getElementById('scale-wrap').style.transform.replace(/[^0-9.]/g,''))||1;
-    return {
-      x:(t.clientX-rect.left)/scale,
-      y:(t.clientY-rect.top)/scale
-    };
-  }
-
-  tarScreen.addEventListener('touchstart',e=>{
-    if(!S.tarOn)return;
-    e.preventDefault();
-    dragging=true;
-    let c=getCanvasCoords(e);
-    lastX=c.x; lastY=c.y;
+/* ── TOUCH: TAR ── */
+(function(){
+  let screen=document.getElementById('tar-screen'),dragging=false,lastX=0,lastY=0;
+  function pos(e){let t=e.touches?e.touches[0]:e,r=screen.getBoundingClientRect();return{x:t.clientX-r.left,y:t.clientY-r.top};}
+  screen.addEventListener('touchstart',e=>{if(!S.tarOn)return;e.preventDefault();dragging=true;let p=pos(e);lastX=p.x;lastY=p.y;},{passive:false});
+  screen.addEventListener('touchmove',e=>{
+    if(!dragging||!S.tarOn)return;e.preventDefault();
+    let p=pos(e),dx=p.x-lastX,dy=p.y-lastY;lastX=p.x;lastY=p.y;
+    let W=screen.offsetWidth,H=screen.offsetHeight;
+    let fovH=S.beam==='narrow'?20:60,fovV=S.beam==='narrow'?14:40;
+    S.tarAz=((S.tarAz+(dx/(W/2))*fovH)%360+360)%360;
+    S.tarEl=Math.max(0,Math.min(45,S.tarEl-(dy/(H/2))*fovV));
   },{passive:false});
-
-  tarScreen.addEventListener('touchmove',e=>{
-    if(!dragging||!S.tarOn)return;
-    e.preventDefault();
-    let c=getCanvasCoords(e);
-    let dx=c.x-lastX;
-    let dy=c.y-lastY;
-    lastX=c.x; lastY=c.y;
-
-    // Map pixel delta → azimuth/elevation delta
-    // TAR canvas is ~165px wide for fovH=60° standard
-    let canvas=document.getElementById('tarCanvas');
-    let W=canvas.width||165, H=canvas.height||240;
-    let fovH=S.beam==='narrow'?20:60;
-    let fovV=S.beam==='narrow'?14:40;
-
-    // dx in pixels → fraction of half-width → degrees azimuth
-    let azDelta=(dx/(W/2))*fovH;
-    let elDelta=-(dy/(H/2))*fovV;
-
-    S.tarAz=((S.tarAz+azDelta)%360+360)%360;
-    S.tarEl=Math.max(0,Math.min(45,S.tarEl+elDelta));
-  },{passive:false});
-
-  tarScreen.addEventListener('touchend',e=>{dragging=false;},{passive:false});
-  tarScreen.addEventListener('touchcancel',e=>{dragging=false;},{passive:false});
+  screen.addEventListener('touchend',()=>{dragging=false;},{passive:false});
 })();
 
-/* ══════════════════════════════════════════════════════════
-   TOUCH CONTROLS — AER (altitude drag)
-══════════════════════════════════════════════════════════ */
-(function setupAERTouch(){
-  let aerScreen=document.getElementById('aer-screen');
-  let dragging=false;
-  let lastY=0;
-
-  function getClientY(e){
-    let t=e.touches?e.touches[0]:e;
-    return t.clientY;
-  }
-
-  aerScreen.addEventListener('touchstart',e=>{
-    if(!S.aerOn)return;
-    e.preventDefault();
-    dragging=true;
-    lastY=getClientY(e);
+/* ── TOUCH: AER ── */
+(function(){
+  let screen=document.getElementById('aer-screen'),dragging=false,lastY=0;
+  screen.addEventListener('touchstart',e=>{if(!S.aerOn)return;e.preventDefault();dragging=true;lastY=e.touches[0].clientY;},{passive:false});
+  screen.addEventListener('touchmove',e=>{
+    if(!dragging||!S.aerOn)return;e.preventDefault();
+    let dy=e.touches[0].clientY-lastY;lastY=e.touches[0].clientY;
+    S.altEl=Math.max(0,Math.min(50,S.altEl-(dy/screen.offsetHeight)*50*2));
   },{passive:false});
-
-  aerScreen.addEventListener('touchmove',e=>{
-    if(!dragging||!S.aerOn)return;
-    e.preventDefault();
-    let cy=getClientY(e);
-    let dy=cy-lastY;
-    lastY=cy;
-
-    // AER canvas ~240px for altMax=50k
-    let canvas=document.getElementById('aerCanvas');
-    let H=canvas.height||240;
-    let altMax=50;
-    // dragging UP = finger moves up = negative dy = higher altitude
-    let altDelta=-(dy/H)*altMax*2;
-    S.altEl=Math.max(0,Math.min(altMax,S.altEl+altDelta));
-  },{passive:false});
-
-  aerScreen.addEventListener('touchend',e=>{dragging=false;},{passive:false});
-  aerScreen.addEventListener('touchcancel',e=>{dragging=false;},{passive:false});
+  screen.addEventListener('touchend',()=>{dragging=false;},{passive:false});
 })();
 
-/* ══════════════════════════════════════════════════════════
-   DRAW — EWR
-══════════════════════════════════════════════════════════ */
+/* ── DRAW: EWR ── */
 function drawEWR(){
-  let canvas=document.getElementById('ewrCanvas');
-  let rect=document.getElementById('ewr-screen').getBoundingClientRect();
-  canvas.width=rect.width||300;canvas.height=rect.height||240;
-  let ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  let el=document.getElementById('ewr-screen');
+  let c=document.getElementById('ewrCanvas');
+  c.width=el.offsetWidth;c.height=el.offsetHeight;
+  let ctx=c.getContext('2d'),W=c.width,H=c.height;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   if(!S.ewrOn){
     ctx.fillStyle='#0a0';ctx.font='11px Courier New';ctx.textAlign='center';
@@ -736,7 +578,6 @@ function drawEWR(){
   document.getElementById('ewr-slbl').style.color='#0f0';
   document.getElementById('ewr-slbl').textContent='ON';
   let cx=W/2,cy=H/2,r=Math.min(cx,cy)-14;
-
   ctx.strokeStyle='#0a4';ctx.lineWidth=0.5;
   for(let i=1;i<=4;i++){ctx.beginPath();ctx.arc(cx,cy,r*i/4,0,Math.PI*2);ctx.stroke();}
   for(let a=0;a<360;a+=30){
@@ -745,7 +586,6 @@ function drawEWR(){
     ctx.fillStyle='#0a4';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(a,cx+Math.cos(rad)*(r+10),cy+Math.sin(rad)*(r+10));
   }
-
   S.ewrSweep+=0.007;if(S.ewrSweep>Math.PI*2)S.ewrSweep-=Math.PI*2;
   for(let i=0;i<12;i++){
     let ang=S.ewrSweep-i*0.035;
@@ -754,13 +594,11 @@ function drawEWR(){
   }
   ctx.strokeStyle='rgba(0,255,60,0.9)';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(S.ewrSweep)*r,cy+Math.sin(S.ewrSweep)*r);ctx.stroke();
-
   S.activemissiles.forEach(m=>{
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
-    let tx=cx+tgt.x*r, ty=cy+tgt.y*r;
-    let mx=cx+(tx-cx)*m.progress, my=cy+(ty-cy)*m.progress;
-    m.trail.push({x:mx,y:my});
-    if(m.trail.length>28)m.trail.shift();
+    let tx=cx+tgt.x*r,ty=cy+tgt.y*r;
+    let mx=cx+(tx-cx)*m.progress,my=cy+(ty-cy)*m.progress;
+    m.trail.push({x:mx,y:my});if(m.trail.length>28)m.trail.shift();
     for(let i=1;i<m.trail.length;i++){
       let a=i/m.trail.length;
       ctx.strokeStyle='rgba(255,160,0,'+a+')';ctx.lineWidth=1.5;
@@ -769,22 +607,18 @@ function drawEWR(){
     ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(mx,my,4,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#ff8800';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mx,my,7,0,Math.PI*2);ctx.stroke();
   });
-
   liveTargets().forEach(t=>{
-    let tx=cx+t.x*r, ty=cy+t.y*r;
+    let tx=cx+t.x*r,ty=cy+t.y*r;
     let trad=Math.atan2(t.y,t.x);
     let diff=((S.ewrSweep-trad)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
     let alpha=diff<0.25?1:Math.max(0,1-diff/(Math.PI*1.4));
-    let age=(Date.now()-t.born)/1000;
-    alpha*=Math.min(1,age/2);
+    let age=(Date.now()-t.born)/1000;alpha*=Math.min(1,age/2);
     if(alpha>0.04){
       if(t.type==='mil'){
-        let sz=6;
-        ctx.fillStyle='rgba(255,80,80,'+alpha+')';
+        let sz=6;ctx.fillStyle='rgba(255,80,80,'+alpha+')';
         ctx.beginPath();ctx.moveTo(tx,ty-sz);ctx.lineTo(tx+sz,ty+sz*0.8);ctx.lineTo(tx-sz,ty+sz*0.8);ctx.closePath();ctx.fill();
       }else{
-        ctx.fillStyle='rgba(80,170,255,'+alpha+')';
-        ctx.beginPath();ctx.arc(tx,ty,5,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='rgba(80,170,255,'+alpha+')';ctx.beginPath();ctx.arc(tx,ty,5,0,Math.PI*2);ctx.fill();
       }
       if(alpha>0.35){
         ctx.fillStyle=t.type==='mil'?'rgba(255,110,110,'+alpha+')':'rgba(100,190,255,'+alpha+')';
@@ -792,8 +626,7 @@ function drawEWR(){
         ctx.fillText(t.id,tx+8,ty-4);
       }
       if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){
-        ctx.strokeStyle='rgba(255,220,0,'+alpha+')';ctx.lineWidth=1.5;
-        ctx.strokeRect(tx-8,ty-8,16,16);
+        ctx.strokeStyle='rgba(255,220,0,'+alpha+')';ctx.lineWidth=1.5;ctx.strokeRect(tx-8,ty-8,16,16);
         let bs=12;
         [[tx-bs,ty-bs,5,5],[tx+bs,ty-bs,-5,5],[tx-bs,ty+bs,5,-5],[tx+bs,ty+bs,-5,-5]].forEach(([ox,oy,dx,dy])=>{
           ctx.strokeStyle='rgba(255,100,0,'+alpha+')';ctx.lineWidth=2;
@@ -802,274 +635,170 @@ function drawEWR(){
       }
     }
   });
-
-  if(S.showCities){
-    CITIES.forEach(c=>{
-      let px=cx+c.ax*r,py=cy+c.ay*r;
-      ctx.fillStyle='#bbb';ctx.font='9px Arial';
-      ctx.fillText('•',px-3,py);
-      ctx.fillText(c.name,px+4,py);
-    });
-  }
+  if(S.showCities){CITIES.forEach(c2=>{let px=cx+c2.ax*r,py=cy+c2.ay*r;ctx.fillStyle='#bbb';ctx.font='9px Arial';ctx.fillText('•',px-3,py);ctx.fillText(c2.name,px+4,py);});}
 }
 
-/* ══════════════════════════════════════════════════════════
-   DRAW — TAR
-══════════════════════════════════════════════════════════ */
+/* ── DRAW: TAR ── */
 function drawTAR(){
-  let canvas=document.getElementById('tarCanvas');
-  let rect=document.getElementById('tar-screen').getBoundingClientRect();
-  canvas.width=rect.width||165;canvas.height=rect.height||240;
-  let ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  let el=document.getElementById('tar-screen');
+  let c=document.getElementById('tarCanvas');
+  c.width=el.offsetWidth;c.height=el.offsetHeight;
+  let ctx=c.getContext('2d'),W=c.width,H=c.height;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   if(!S.tarOn){
     ctx.fillStyle='#0a0';ctx.font='10px Courier New';ctx.textAlign='center';
     ctx.fillText('TARGET ACQ RADAR',W/2,H/2-10);
     ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+8);
-    // Touch hint
-    ctx.fillStyle='#333';ctx.font='9px Courier New';ctx.textAlign='center';
-    ctx.fillText('DRAG TO STEER',W/2,H/2+28);
-    document.getElementById('tar-slbl').style.color='#f00';
-    document.getElementById('tar-slbl').textContent='OFF';return;
+    ctx.fillStyle='#333';ctx.font='9px Courier New';ctx.fillText('DRAG TO STEER',W/2,H/2+26);
+    document.getElementById('tar-slbl').style.color='#f00';document.getElementById('tar-slbl').textContent='OFF';return;
   }
-  document.getElementById('tar-slbl').style.color='#0f0';
-  document.getElementById('tar-slbl').textContent='ON';
-  let cx=W/2,cy=H/2;
-  let fovH=S.beam==='narrow'?20:60,fovV=S.beam==='narrow'?14:40;
-
+  document.getElementById('tar-slbl').style.color='#0f0';document.getElementById('tar-slbl').textContent='ON';
+  let cx=W/2,cy=H/2,fovH=S.beam==='narrow'?20:60,fovV=S.beam==='narrow'?14:40;
   ctx.strokeStyle='#0a4';ctx.lineWidth=0.5;
   for(let g=-fovV;g<=fovV;g+=Math.round(fovV/4)){
     let y=cy+(g/fovV)*(H/2-10);
     ctx.beginPath();ctx.moveTo(8,y);ctx.lineTo(W-8,y);ctx.stroke();
-    ctx.fillStyle='#0a4';ctx.font='7px Courier New';ctx.textAlign='left';
-    ctx.fillText((-g).toFixed(0)+'°',2,y+3);
+    ctx.fillStyle='#0a4';ctx.font='7px Courier New';ctx.textAlign='left';ctx.fillText((-g).toFixed(0)+'°',2,y+3);
   }
   for(let g=-fovH;g<=fovH;g+=Math.round(fovH/4)){
     let x=cx+(g/fovH)*(W/2-10);
     ctx.beginPath();ctx.moveTo(x,8);ctx.lineTo(x,H-8);ctx.stroke();
-    ctx.fillStyle='#0a4';ctx.font='7px Courier New';ctx.textAlign='center';
-    ctx.fillText(g.toFixed(0)+'°',x,H-2);
+    ctx.fillStyle='#0a4';ctx.font='7px Courier New';ctx.textAlign='center';ctx.fillText(g.toFixed(0)+'°',x,H-2);
   }
   ctx.strokeStyle='rgba(0,255,60,0.4)';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
   ctx.beginPath();ctx.moveTo(cx,8);ctx.lineTo(cx,H-8);ctx.stroke();
   ctx.beginPath();ctx.moveTo(8,cy);ctx.lineTo(W-8,cy);ctx.stroke();
   ctx.setLineDash([]);
-
   S.activemissiles.forEach(m=>{
     if(!S.lockTarget||m.targetId!==S.lockTarget.id)return;
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
-    let taz=targetAz(tgt);
-    let relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
+    let taz=targetAz(tgt),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
     let relEl=tgt.alt-S.tarEl;
     if(Math.abs(relAz)<fovH&&Math.abs(relEl)<fovV){
       let tx=cx+(relAz/fovH)*(W/2-10),ty=cy-(relEl/fovV)*(H/2-10);
-      let mg=ctx.createRadialGradient(tx,ty,0,tx,ty,12*m.progress+2);
-      mg.addColorStop(0,'rgba(255,200,0,0.9)');mg.addColorStop(1,'rgba(255,100,0,0)');
-      ctx.fillStyle=mg;ctx.beginPath();ctx.arc(tx,ty,12*m.progress+2,0,Math.PI*2);ctx.fill();
+      let mg2=ctx.createRadialGradient(tx,ty,0,tx,ty,12*m.progress+2);
+      mg2.addColorStop(0,'rgba(255,200,0,0.9)');mg2.addColorStop(1,'rgba(255,100,0,0)');
+      ctx.fillStyle=mg2;ctx.beginPath();ctx.arc(tx,ty,12*m.progress+2,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(tx,ty,3,0,Math.PI*2);ctx.fill();
     }
   });
-
   liveTargets().forEach(t=>{
-    let taz=targetAz(t);
-    let relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
+    let taz=targetAz(t),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
     let relEl=t.alt-S.tarEl;
     if(Math.abs(relAz)<fovH&&Math.abs(relEl)<fovV){
       let tx=cx+(relAz/fovH)*(W/2-10),ty=cy-(relEl/fovV)*(H/2-10);
-      let isMil=t.type==='mil';
-      if(isMil){
-        let sz=7;ctx.strokeStyle='#f55';ctx.lineWidth=1.5;
-        ctx.beginPath();ctx.moveTo(tx,ty-sz);ctx.lineTo(tx+sz,ty+sz*0.8);ctx.lineTo(tx-sz,ty+sz*0.8);ctx.closePath();ctx.stroke();
-      }else{
-        ctx.strokeStyle='#5af';ctx.lineWidth=1.5;
-        ctx.strokeRect(tx-7,ty-7,14,14);
-      }
-      ctx.fillStyle=isMil?'#f55':'#5af';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
-      ctx.fillText(t.id,tx+9,ty-1);
+      if(t.type==='mil'){let sz=7;ctx.strokeStyle='#f55';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(tx,ty-sz);ctx.lineTo(tx+sz,ty+sz*0.8);ctx.lineTo(tx-sz,ty+sz*0.8);ctx.closePath();ctx.stroke();}
+      else{ctx.strokeStyle='#5af';ctx.lineWidth=1.5;ctx.strokeRect(tx-7,ty-7,14,14);}
+      ctx.fillStyle=t.type==='mil'?'#f55':'#5af';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(t.id,tx+9,ty-1);
       if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){
-        ctx.strokeStyle='#ff0';ctx.lineWidth=2;
-        ctx.beginPath();ctx.arc(tx,ty,13,0,Math.PI*2);ctx.stroke();
+        ctx.strokeStyle='#ff0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(tx,ty,13,0,Math.PI*2);ctx.stroke();
         let p=0.5+0.5*Math.sin(Date.now()*0.01);
         ctx.strokeStyle='rgba(255,'+(Math.floor(p*200))+',0,'+p+')';ctx.lineWidth=1;
-        ctx.beginPath();
-        ctx.moveTo(tx-20,ty);ctx.lineTo(tx-14,ty);ctx.moveTo(tx+14,ty);ctx.lineTo(tx+20,ty);
-        ctx.moveTo(tx,ty-20);ctx.lineTo(tx,ty-14);ctx.moveTo(tx,ty+14);ctx.lineTo(tx,ty+20);
-        ctx.stroke();
+        ctx.beginPath();ctx.moveTo(tx-20,ty);ctx.lineTo(tx-14,ty);ctx.moveTo(tx+14,ty);ctx.lineTo(tx+20,ty);
+        ctx.moveTo(tx,ty-20);ctx.lineTo(tx,ty-14);ctx.moveTo(tx,ty+14);ctx.lineTo(tx,ty+20);ctx.stroke();
       }
     }
   });
-
-  let chx=cx, chy=cy;
+  let chx=cx,chy=cy;
   if(S.locked&&S.lockTarget){
     let lt=liveTargets().find(t=>t.id===S.lockTarget.id);
     if(lt){
-      let taz=targetAz(lt);
-      let relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
+      let taz=targetAz(lt),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
       let relEl=lt.alt-S.tarEl;
-      if(Math.abs(relAz)<fovH&&Math.abs(relEl)<fovV){
-        chx=cx+(relAz/fovH)*(W/2-10);
-        chy=cy-(relEl/fovV)*(H/2-10);
-      }
+      if(Math.abs(relAz)<fovH&&Math.abs(relEl)<fovV){chx=cx+(relAz/fovH)*(W/2-10);chy=cy-(relEl/fovV)*(H/2-10);}
     }
   }
   let chColor=S.locked?'#ff0':'#0f0';
   ctx.strokeStyle=chColor;ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(chx-7,chy);ctx.lineTo(chx+7,chy);ctx.stroke();
   ctx.beginPath();ctx.moveTo(chx,chy-7);ctx.lineTo(chx,chy+7);ctx.stroke();
-  if(S.locked){
-    let p=0.5+0.5*Math.sin(Date.now()*0.008);
-    ctx.strokeStyle='rgba(255,220,0,'+p+')';ctx.lineWidth=1;
-    ctx.beginPath();ctx.arc(chx,chy,10,0,Math.PI*2);ctx.stroke();
-  }
+  if(S.locked){let p=0.5+0.5*Math.sin(Date.now()*0.008);ctx.strokeStyle='rgba(255,220,0,'+p+')';ctx.lineWidth=1;ctx.beginPath();ctx.arc(chx,chy,10,0,Math.PI*2);ctx.stroke();}
   ctx.fillStyle='#0a0';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
-  ctx.fillText('AZ:'+S.tarAz.toFixed(1)+'°',4,12);
-  ctx.fillText('EL:'+S.tarEl.toFixed(1)+'°',4,22);
-
-  // Drag hint overlay (faint)
-  if(S.tarOn){
-    ctx.fillStyle='rgba(0,80,0,0.3)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';
-    ctx.fillText('◀ DRAG ▶',cx,H-4);
-  }
-
+  ctx.fillText('AZ:'+S.tarAz.toFixed(1)+'°',4,12);ctx.fillText('EL:'+S.tarEl.toFixed(1)+'°',4,22);
+  ctx.fillStyle='rgba(0,80,0,0.35)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('◀ DRAG ▶',cx,H-4);
   document.getElementById('hdg-d').textContent=S.tarAz.toFixed(2).padStart(6,'0');
   document.getElementById('elev-d').textContent=S.tarEl.toFixed(2).padStart(5,'0');
 }
 
-/* ══════════════════════════════════════════════════════════
-   DRAW — AER
-══════════════════════════════════════════════════════════ */
+/* ── DRAW: AER ── */
 function drawAER(){
-  let canvas=document.getElementById('aerCanvas');
-  let rect=document.getElementById('aer-screen').getBoundingClientRect();
-  canvas.width=rect.width||165;canvas.height=rect.height||240;
-  let ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  let el=document.getElementById('aer-screen');
+  let c=document.getElementById('aerCanvas');
+  c.width=el.offsetWidth;c.height=el.offsetHeight;
+  let ctx=c.getContext('2d'),W=c.width,H=c.height;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   if(!S.aerOn){
     ctx.fillStyle='#0a0';ctx.font='10px Courier New';ctx.textAlign='center';
     ctx.fillText('ALT ELEV RADAR',W/2,H/2-10);
     ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+8);
-    ctx.fillStyle='#333';ctx.font='9px Courier New';ctx.textAlign='center';
-    ctx.fillText('DRAG TO ADJUST',W/2,H/2+28);
-    document.getElementById('aer-slbl').style.color='#f00';
-    document.getElementById('aer-slbl').textContent='OFF';return;
+    ctx.fillStyle='#333';ctx.font='9px Courier New';ctx.fillText('DRAG TO ADJUST',W/2,H/2+26);
+    document.getElementById('aer-slbl').style.color='#f00';document.getElementById('aer-slbl').textContent='OFF';return;
   }
-  document.getElementById('aer-slbl').style.color='#0f0';
-  document.getElementById('aer-slbl').textContent='EL:'+S.altEl.toFixed(0)+'k';
-
+  document.getElementById('aer-slbl').style.color='#0f0';document.getElementById('aer-slbl').textContent='EL:'+S.altEl.toFixed(0)+'k';
   let altMax=50,fovAlt=S.beam==='narrow'?3:8;
   for(let g=0;g<=altMax;g+=5){
     let y=H-10-(g/altMax)*(H-20);
-    ctx.strokeStyle='#046';ctx.lineWidth=0.5;
-    ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(W-4,y);ctx.stroke();
-    ctx.fillStyle='#046';ctx.font='8px Courier New';ctx.textAlign='right';ctx.textBaseline='middle';
-    ctx.fillText(g+'k',22,y);
+    ctx.strokeStyle='#046';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(W-4,y);ctx.stroke();
+    ctx.fillStyle='#046';ctx.font='8px Courier New';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(g+'k',22,y);
   }
   let beamCY=H-10-(S.altEl/altMax)*(H-20);
-  let beamY1=H-10-((S.altEl-fovAlt)/altMax)*(H-20);
-  let beamY2=H-10-((S.altEl+fovAlt)/altMax)*(H-20);
-  beamY1=Math.max(4,Math.min(H-4,beamY1));beamY2=Math.max(4,Math.min(H-4,beamY2));
+  let beamY1=Math.max(4,Math.min(H-4,H-10-((S.altEl-fovAlt)/altMax)*(H-20)));
+  let beamY2=Math.max(4,Math.min(H-4,H-10-((S.altEl+fovAlt)/altMax)*(H-20)));
   ctx.fillStyle='rgba(0,80,50,0.2)';ctx.fillRect(24,beamY2,W-28,beamY1-beamY2);
   ctx.strokeStyle='rgba(0,180,90,0.6)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
-  ctx.beginPath();ctx.moveTo(24,beamCY);ctx.lineTo(W-4,beamCY);ctx.stroke();
-  ctx.setLineDash([]);
-
+  ctx.beginPath();ctx.moveTo(24,beamCY);ctx.lineTo(W-4,beamCY);ctx.stroke();ctx.setLineDash([]);
   S.activemissiles.forEach(m=>{
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
     let my=H-10-(tgt.alt/altMax)*(H-20);
     ctx.strokeStyle='rgba(255,180,0,0.6)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
     ctx.beginPath();ctx.moveTo(26,my);ctx.lineTo(W-4,my);ctx.stroke();ctx.setLineDash([]);
-    let dotX=26+(W-30)*m.progress;
-    ctx.fillStyle='#ffaa00';ctx.beginPath();ctx.arc(dotX,my,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffaa00';ctx.beginPath();ctx.arc(26+(W-30)*m.progress,my,3,0,Math.PI*2);ctx.fill();
   });
-
   liveTargets().forEach(t=>{
-    let ty=H-10-(t.alt/altMax)*(H-20);
-    let inBeam=Math.abs(t.alt-S.altEl)<fovAlt;
-    let col=t.type==='mil'?'#f55':'#5af';
-    let dim=t.type==='mil'?'#522':'#024';
+    let ty=H-10-(t.alt/altMax)*(H-20),inBeam=Math.abs(t.alt-S.altEl)<fovAlt;
+    let col=t.type==='mil'?'#f55':'#5af',dim=t.type==='mil'?'#522':'#024';
     ctx.strokeStyle=inBeam?col:dim;ctx.lineWidth=inBeam?2:1;
     ctx.beginPath();ctx.moveTo(26,ty);ctx.lineTo(W-4,ty);ctx.stroke();
-    ctx.fillStyle=inBeam?col:dim;ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
-    ctx.fillText(t.id+' '+t.alt.toFixed(0)+'k',28,ty-2);
+    ctx.fillStyle=inBeam?col:dim;ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(t.id+' '+t.alt.toFixed(0)+'k',28,ty-2);
     if(inBeam){ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.strokeRect(W-17,ty-4,13,9);}
-    if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){
-      ctx.strokeStyle='#ff0';ctx.lineWidth=2;ctx.strokeRect(W-19,ty-6,17,13);
-    }
+    if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){ctx.strokeStyle='#ff0';ctx.lineWidth=2;ctx.strokeRect(W-19,ty-6,17,13);}
   });
   ctx.strokeStyle='#0ff';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(20,beamCY-5);ctx.lineTo(20,beamCY+5);ctx.stroke();
   ctx.beginPath();ctx.moveTo(14,beamCY);ctx.lineTo(28,beamCY);ctx.stroke();
-  ctx.fillStyle='#0aa';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
-  ctx.fillText('EL:'+S.altEl.toFixed(1)+'k',28,13);
-
-  // Drag hint
-  ctx.fillStyle='rgba(0,60,60,0.4)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  ctx.fillText('▲ DRAG ▼',W/2,H-4);
-
+  ctx.fillStyle='#0aa';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('EL:'+S.altEl.toFixed(1)+'k',28,13);
+  ctx.fillStyle='rgba(0,60,60,0.4)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('▲ DRAG ▼',W/2,H-4);
   document.getElementById('alt-d').textContent=S.altEl.toFixed(2).padStart(5,'0');
 }
 
-/* ══════════════════════════════════════════════════════════
-   DRAW — MINI GRAPH
-══════════════════════════════════════════════════════════ */
+/* ── DRAW: MINI GRAPH ── */
 function drawMiniGraph(){
-  let canvas=document.getElementById('miniGraphCanvas');
+  let c=document.getElementById('miniGraphCanvas');
   let wrap=document.getElementById('aer-mini-wrap');
-  let rect=wrap.getBoundingClientRect();
-  canvas.width=rect.width||165;canvas.height=rect.height||52;
-  let ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  c.width=wrap.offsetWidth||330;c.height=wrap.offsetHeight||52;
+  let ctx=c.getContext('2d'),W=c.width,H=c.height;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
-
-  let pad={l:22,r:8,t:5,b:14};
-  let gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
-  let altMax=50;
-
+  let pad={l:22,r:8,t:5,b:14},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b,altMax=50;
   ctx.strokeStyle='rgba(0,255,136,0.12)';ctx.lineWidth=0.5;
-  for(let v=0;v<=altMax;v+=25){
-    let gy=pad.t+gH-(v/altMax)*gH;
-    ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+gW,gy);ctx.stroke();
-  }
-
+  for(let v=0;v<=altMax;v+=25){let gy=pad.t+gH-(v/altMax)*gH;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+gW,gy);ctx.stroke();}
   ctx.strokeStyle='#00ff88';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.stroke();
   ctx.beginPath();ctx.moveTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
-
   ctx.fillStyle='#00ff88';ctx.font='6px Courier New';ctx.textAlign='right';ctx.textBaseline='middle';
-  for(let v=0;v<=altMax;v+=25){
-    let gy=pad.t+gH-(v/altMax)*gH;
-    ctx.fillText(v,pad.l-2,gy);
-  }
-  ctx.fillStyle='#00ff88';ctx.textAlign='center';ctx.textBaseline='top';ctx.font='6px Courier New';
-  ctx.fillText('EL°',pad.l+gW/2,H-9);
-
-  let ox=pad.l, oy=pad.t+gH;
-  let lineLen=Math.min(gW,gH)*0.92;
-  let angleDeg=(S.altEl/altMax)*85;
-  let angleRad=angleDeg*(Math.PI/180);
-  let tipX=ox+lineLen*Math.cos(angleRad);
-  let tipY=oy-lineLen*Math.sin(angleRad);
-
-  ctx.strokeStyle='rgba(0,255,136,0.18)';ctx.lineWidth=1;
-  ctx.beginPath();ctx.arc(ox,oy,lineLen,-(85*Math.PI/180),0);ctx.stroke();
-
-  ctx.strokeStyle='#ffee00';ctx.lineWidth=2;ctx.setLineDash([]);
-  ctx.shadowColor='#ffee00';ctx.shadowBlur=4;
-  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tipX,tipY);ctx.stroke();
-  ctx.shadowBlur=0;
-
-  ctx.fillStyle='#ffee00';ctx.shadowColor='#ffee00';ctx.shadowBlur=6;
-  ctx.beginPath();ctx.arc(tipX,tipY,2.5,0,Math.PI*2);ctx.fill();
-  ctx.shadowBlur=0;
-
+  for(let v=0;v<=altMax;v+=25){let gy=pad.t+gH-(v/altMax)*gH;ctx.fillText(v,pad.l-2,gy);}
+  ctx.fillStyle='#00ff88';ctx.textAlign='center';ctx.textBaseline='top';ctx.font='6px Courier New';ctx.fillText('EL°',pad.l+gW/2,H-9);
+  let ox=pad.l,oy=pad.t+gH,lineLen=Math.min(gW,gH)*0.92;
+  let angleRad=(S.altEl/altMax)*85*(Math.PI/180);
+  let tipX=ox+lineLen*Math.cos(angleRad),tipY=oy-lineLen*Math.sin(angleRad);
+  ctx.strokeStyle='rgba(0,255,136,0.18)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(ox,oy,lineLen,-(85*Math.PI/180),0);ctx.stroke();
+  ctx.strokeStyle='#ffee00';ctx.lineWidth=2;ctx.shadowColor='#ffee00';ctx.shadowBlur=4;
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tipX,tipY);ctx.stroke();ctx.shadowBlur=0;
+  ctx.fillStyle='#ffee00';ctx.shadowColor='#ffee00';ctx.shadowBlur=6;ctx.beginPath();ctx.arc(tipX,tipY,2.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
   ctx.fillStyle='#00ff88';ctx.beginPath();ctx.arc(ox,oy,2,0,Math.PI*2);ctx.fill();
-
-  ctx.fillStyle='#ffee00';ctx.font='6px Courier New';ctx.textAlign='left';ctx.textBaseline='top';
-  ctx.fillText(S.altEl.toFixed(0)+'k',pad.l+2,pad.t);
+  ctx.fillStyle='#ffee00';ctx.font='6px Courier New';ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(S.altEl.toFixed(0)+'k',pad.l+2,pad.t);
 }
 
-/* ══════════════════════════════════════════════════════════
-   ANIMATION LOOP
-══════════════════════════════════════════════════════════ */
+/* ── ANIMATION LOOP ── */
 function animate(){
   if(S.keys['a']||S.keys['A'])S.tarAz-=0.2;
   if(S.keys['d']||S.keys['D'])S.tarAz+=0.2;
@@ -1078,67 +807,40 @@ function animate(){
   if(S.keys['8'])S.altEl=Math.min(50,S.altEl+0.08);
   if(S.keys['2'])S.altEl=Math.max(0,S.altEl-0.08);
   S.tarAz=((S.tarAz%360)+360)%360;
-
   liveTargets().forEach(t=>{
-    let speed=Math.sqrt(t.vx*t.vx+t.vy*t.vy);
-    let ang=Math.atan2(t.vy,t.vx);
-    let dist=targetDist(t);
+    let speed=Math.sqrt(t.vx*t.vx+t.vy*t.vy),ang=Math.atan2(t.vy,t.vx),dist=targetDist(t);
     if(dist>0.82){
-      let toCenter=Math.atan2(-t.y,-t.x);
-      let diff=toCenter-ang;
-      while(diff>Math.PI)diff-=Math.PI*2;
-      while(diff<-Math.PI)diff+=Math.PI*2;
-      let turnStrength=((dist-0.82)/0.18)*0.012;
-      ang+=diff*turnStrength;
-    } else {
-      ang+=t.hdgWander;
-    }
-    t.vx=Math.cos(ang)*speed;
-    t.vy=Math.sin(ang)*speed;
-    t.x+=t.vx;
-    t.y+=t.vy;
-    let d2=targetDist(t);
-    if(d2>0.97){t.x*=0.97/d2;t.y*=0.97/d2;}
-    t.alt+=t.altRate;
-    if(t.alt>48||t.alt<8)t.altRate*=-1;
+      let tc2=Math.atan2(-t.y,-t.x),diff=tc2-ang;
+      while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
+      ang+=diff*((dist-0.82)/0.18)*0.012;
+    }else{ang+=t.hdgWander;}
+    t.vx=Math.cos(ang)*speed;t.vy=Math.sin(ang)*speed;t.x+=t.vx;t.y+=t.vy;
+    let d2=targetDist(t);if(d2>0.97){t.x*=0.97/d2;t.y*=0.97/d2;}
+    t.alt+=t.altRate;if(t.alt>48||t.alt<8)t.altRate*=-1;
     t.hdg=((Math.atan2(t.vx,-t.vy)*180/Math.PI)+360)%360;
   });
-
   TARGETS=TARGETS.filter(t=>!S.destroyedIds.has(t.id));
-
   let now=Date.now();
-  if(now-lastSpawn>spawnInterval && TARGETS.filter(t=>!S.destroyedIds.has(t.id)).length<6){
-    let nt=spawnAircraft();
-    let ra=0.82+Math.random()*0.10, aa=Math.random()*Math.PI*2;
-    nt.x=Math.cos(aa)*ra; nt.y=Math.sin(aa)*ra;
-    TARGETS.push(nt);
-    lastSpawn=now;
-    spawnInterval=18000+Math.random()*12000;
+  if(now-lastSpawn>spawnInterval&&liveTargets().length<6){
+    let nt=spawnAircraft(),ra=0.82+Math.random()*0.10,aa=Math.random()*Math.PI*2;
+    nt.x=Math.cos(aa)*ra;nt.y=Math.sin(aa)*ra;TARGETS.push(nt);
+    lastSpawn=now;spawnInterval=18000+Math.random()*12000;
   }
-
-  if(S.locked&&S.lockTarget){
-    let lt=TARGETS.find(t=>t.id===S.lockTarget.id&&!S.destroyedIds.has(t.id));
-    if(lt)S.lockTarget=lt;
-  }
-
+  if(S.locked&&S.lockTarget){let lt=TARGETS.find(t=>t.id===S.lockTarget.id&&!S.destroyedIds.has(t.id));if(lt)S.lockTarget=lt;}
   S.activemissiles=S.activemissiles.filter(m=>{
     m.progress+=0.003;
     if(m.progress>=1){
-      S.destroyedIds.add(m.targetId);
-      TARGETS=TARGETS.filter(t=>t.id!==m.targetId);
+      S.destroyedIds.add(m.targetId);TARGETS=TARGETS.filter(t=>t.id!==m.targetId);
       flash('MISSILE IMPACT ON '+m.targetId+' — TARGET DESTROYED!');
       if(S.lockTarget&&S.lockTarget.id===m.targetId){S.locked=false;S.lockTarget=null;applyLockUI();}
       return false;
-    }
-    return true;
+    }return true;
   });
-
   drawEWR();drawTAR();drawAER();drawMiniGraph();
   let al=(S.tarOn&&S.ewrOn)?checkAlign():null;
   if(al&&!S.locked)flash('TAR+ALT ALIGNED ON '+al.id+' ('+al.label+') — TAP LOCK / PRESS X');
   requestAnimationFrame(animate);
 }
-
 window.addEventListener('keydown',e=>{
   let k=e.key;
   if(['a','s','d','w','A','S','D','W','8','2','x','X','n','N'].includes(k))e.preventDefault();
@@ -1147,7 +849,6 @@ window.addEventListener('keydown',e=>{
   if(k==='n'||k==='N')fireMissile();
 });
 window.addEventListener('keyup',e=>{S.keys[e.key]=false;});
-
 animate();
 </script>
 </body>
