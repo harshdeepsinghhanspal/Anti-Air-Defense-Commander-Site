@@ -36,9 +36,7 @@ html,body{
 #scale-wrap{
   width:980px;
   transform-origin:top center;
-  /* JS will set the scale via --ui-scale */
-  transform:scale(var(--ui-scale,1));
-  margin-bottom:calc((var(--ui-scale,1) - 1) * -980px);/* collapse gap when scaled down */
+  /* JS controls transform and marginBottom dynamically */
 }
 
 .panel{background:#2a2a2a;border:3px solid #555;border-radius:8px;padding:7px;font-family:'Courier New',monospace;color:#0f0;width:980px;margin:20px auto 0 auto;}
@@ -248,9 +246,10 @@ html,body{
 
 </div>
 </div>
+</div><!-- /scale-wrap -->
 
-<!-- TUTORIAL BUTTON -->
-<div style="width:980px;margin:12px auto 0 auto;display:flex;justify-content:center;">
+<!-- TUTORIAL BUTTON — outside scale-wrap, always visible -->
+<div id="tut-btn-wrap" style="display:flex;justify-content:center;margin-top:10px;">
   <button onclick="document.getElementById('tutorial-section').scrollIntoView({behavior:'smooth'})"
     style="background:#111;border:2px solid #0a4;color:#0f0;font-family:'Courier New',monospace;font-size:13px;letter-spacing:3px;padding:8px 32px;cursor:pointer;text-transform:uppercase;border-radius:4px;transition:background 0.2s,box-shadow 0.2s;box-shadow:0 0 8px #0a422a;"
     onmouseover="this.style.background='#0a2018';this.style.boxShadow='0 0 18px #0f0';"
@@ -259,8 +258,8 @@ html,body{
   </button>
 </div>
 
-<!-- TUTORIAL SECTION -->
-<section id="tutorial-section" style="width:980px;margin:32px auto 60px auto;font-family:'Courier New',monospace;color:#ccc;background:#111;border:2px solid #333;border-radius:8px;padding:32px 36px;line-height:1.7;">
+<!-- TUTORIAL SECTION — outside scale-wrap -->
+<section id="tutorial-section" style="width:min(980px,96vw);margin:32px auto 60px auto;font-family:'Courier New',monospace;color:#ccc;background:#111;border:2px solid #333;border-radius:8px;padding:32px 36px;line-height:1.7;">
 
   <div style="border-bottom:2px solid #0a4;padding-bottom:12px;margin-bottom:28px;">
     <div style="font-size:22px;color:#0f0;letter-spacing:4px;font-weight:bold;">OPERATOR GUIDE</div>
@@ -391,17 +390,33 @@ document.addEventListener('mozfullscreenchange',updateFsBtn);
 
 function applyScale(){
   let vw=window.innerWidth, vh=window.innerHeight;
-  // In landscape the relevant constraint is the viewport width vs 980
-  let scale=Math.min(vw/980, 1); // never upscale beyond 1 on desktop
-  // Also make sure it fits vertically (UI is about 600px + tutorial)
-  document.getElementById('scale-wrap').style.setProperty('--ui-scale', scale);
-  document.getElementById('scale-wrap').style.transform='scale('+scale+')';
-  // Collapse negative margin so content below isn't floating
-  let panelH=980; // approximate scaled height we care about
-  document.getElementById('scale-wrap').style.marginBottom='0';
+  let wrap=document.getElementById('scale-wrap');
+
+  // Reset to natural size to measure true height
+  wrap.style.transform='scale(1)';
+  wrap.style.marginBottom='0';
+  let naturalH=wrap.scrollHeight||wrap.offsetHeight||600;
+
+  // Reserve ~66px for the tutorial button row + body top margin
+  let reservedV=66;
+  let availH=vh-reservedV;
+
+  let scaleW=vw/980;
+  let scaleH=availH/naturalH;
+  let scale=Math.min(scaleW, scaleH, 1); // never upscale above 1
+
+  wrap.style.transform='scale('+scale+')';
+  wrap.style.transformOrigin='top center';
+
+  // Collapse gap caused by CSS scale keeping the original layout box size
+  let gap=naturalH*(1-scale);
+  wrap.style.marginBottom=(-gap)+'px';
 }
 window.addEventListener('resize', applyScale);
 window.addEventListener('orientationchange', ()=>setTimeout(applyScale,200));
+// Run after layout is fully painted
+document.addEventListener('DOMContentLoaded', ()=>{ applyScale(); setTimeout(applyScale,150); });
+window.addEventListener('load', ()=>setTimeout(applyScale,100));
 applyScale();
 
 // Try to lock orientation to landscape on supported browsers
