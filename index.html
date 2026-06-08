@@ -213,7 +213,7 @@ html,body{
         justify-content:center;gap:2px;flex:1;">
         <div style="font-size:8px;color:#555;letter-spacing:1px;text-transform:uppercase;">TARGET</div>
         <div id="tar-target-display" style="font-size:13px;color:#0ff;font-family:'Courier New',monospace;
-          font-weight:bold;letter-spacing:1px;">TAR: -- --</div>
+          font-weight:bold;letter-spacing:1px;">TAR: -- -- --</div>
       </div>
     </div>
 
@@ -394,7 +394,6 @@ function applyScale(){
   wrap.style.transform='scale(1)';
   wrap.style.marginBottom='0';
   let naturalH=wrap.scrollHeight||wrap.offsetHeight||700;
-  // Reserve space for tutorial button (~44px) + small top margin (10px)
   let reservedV=54;
   let availH=vh-reservedV;
   let scaleW=vw/1200;
@@ -438,6 +437,18 @@ const MIL_LABELS=['GORTHEX','VALDRIS','MORTHEX','HELIX-9','STRIKER','WRAITH-2','
 const CIV_LABELS=['ARELION AIR','CRESTAVIA 4','VELSTRAAT 7','NORDEX 51','ALTA WINGS','ORBIS 88','SUNJET 12','HORIZON 7','AIROVA 3','SKYLINK 9'];
 
 function randSpeed(t){return t==='mil'?0.00013+Math.random()*0.00008:0.00005+Math.random()*0.00004;}
+
+/*
+ * SPEED CALIBRATION — realistic knot ranges:
+ *   Military: base speed 0.00013–0.00021 sim-units/frame → 533–861 kts (mul=4,100,000)
+ *   Civilian: base speed 0.00005–0.00009 sim-units/frame → 320–576 kts (mul=6,400,000)
+ */
+function kts(t){
+  let rawSpd=Math.sqrt(t.vx*t.vx+t.vy*t.vy);
+  let mult=t.type==='mil'?4100000:6400000;
+  return Math.round(rawSpd*mult);
+}
+
 function spawnAircraft(){
   let type=Math.random()<0.45?'mil':'civ';
   let ea=Math.random()*Math.PI*2;
@@ -681,24 +692,18 @@ function drawTAR(){
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
     let taz=targetAz(tgt),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
     let relEl=tgt.alt-S.tarEl;
-    // Target pixel position (where missile is heading)
     let destX=cx+(relAz/fovH)*(W/2-10);
     let destY=cy-(relEl/fovV)*(H/2-10);
-    // Launch from bottom-center (0° az, ground level = below screen)
     let startX=cx;
     let startY=H-4;
-    // Current missile pixel position interpolated by progress
     let mx=startX+(destX-startX)*m.progress;
     let my=startY+(destY-startY)*m.progress;
-    // Draw trail
     ctx.strokeStyle='rgba(255,160,0,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
     ctx.beginPath();ctx.moveTo(startX,startY);ctx.lineTo(mx,my);ctx.stroke();ctx.setLineDash([]);
-    // Draw missile dot with glow
     let grd=ctx.createRadialGradient(mx,my,0,mx,my,8);
     grd.addColorStop(0,'rgba(255,220,50,1)');grd.addColorStop(1,'rgba(255,80,0,0)');
     ctx.fillStyle=grd;ctx.beginPath();ctx.arc(mx,my,8,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mx,my,2.5,0,Math.PI*2);ctx.fill();
-    // Impact flash when near target
     if(m.progress>0.92){
       let alpha=(m.progress-0.92)/0.08;
       let flash=ctx.createRadialGradient(destX,destY,0,destX,destY,18*alpha+4);
@@ -756,7 +761,11 @@ function drawAER(){
     ctx.fillText('ALT ELEV RADAR',W/2,H/2-10);
     ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+10);
     ctx.fillStyle='#333';ctx.font='13px Courier New';ctx.fillText('DRAG TO ADJUST',W/2,H/2+30);
-    document.getElementById('aer-slbl').style.color='#f00';document.getElementById('aer-slbl').textContent='OFF';return;
+    document.getElementById('aer-slbl').style.color='#f00';document.getElementById('aer-slbl').textContent='OFF';
+    // When AER is offline, show no-contact state
+    let tarDisp=document.getElementById('tar-target-display');
+    tarDisp.textContent='TAR: -- -- --';tarDisp.style.color='#0ff';
+    return;
   }
   document.getElementById('aer-slbl').style.color='#0f0';document.getElementById('aer-slbl').textContent='EL:'+S.altEl.toFixed(0)+'k';
   let altMax=50,fovAlt=S.beam==='narrow'?3:8;
@@ -793,20 +802,35 @@ function drawAER(){
   ctx.fillStyle='#0aa';ctx.font='14px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('EL:'+S.altEl.toFixed(1)+'k',28,17);
   ctx.fillStyle='rgba(0,60,60,0.4)';ctx.font='14px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('▲ DRAG ▼',W/2,H-4);
   document.getElementById('alt-d').textContent=S.altEl.toFixed(2).padStart(5,'0');
-  // Update TAR target display: show locked target or closest in-beam target
+
+  /* ── TAR TARGET DISPLAY ──
+   * Rules:
+   *  1. If locked → show locked target (always, regardless of beam position)
+   *  2. Else if AER beam intersects ≥1 aircraft → show closest one in beam
+   *  3. Else → TAR: -- -- -- (beam not covering any aircraft)
+   */
   let tarDisp=document.getElementById('tar-target-display');
+  // Strictly beam-contact targets only
   let beamTargets=liveTargets().filter(t=>Math.abs(t.alt-S.altEl)<fovAlt);
-  function kts(t){return Math.round(Math.sqrt(t.vx*t.vx+t.vy*t.vy)*6000000);}
+
   if(S.locked&&S.lockTarget){
-    let t=S.lockTarget;
-    tarDisp.textContent='TAR: '+t.id+' '+t.alt.toFixed(0)+'k '+kts(t)+' kts';
-    tarDisp.style.color='#ff0';
+    let t=liveTargets().find(tt=>tt.id===S.lockTarget.id);
+    if(t){
+      tarDisp.textContent='TAR: '+t.id+' '+t.alt.toFixed(0)+'k '+kts(t)+' kts';
+      tarDisp.style.color='#ff0';
+    }else{
+      // Locked target destroyed
+      tarDisp.textContent='TAR: -- -- --';
+      tarDisp.style.color='#0ff';
+    }
   }else if(beamTargets.length>0){
+    // Pick the aircraft whose altitude is closest to the beam centre
     let closest=beamTargets.reduce((a,b)=>Math.abs(a.alt-S.altEl)<Math.abs(b.alt-S.altEl)?a:b);
     tarDisp.textContent='TAR: '+closest.id+' '+closest.alt.toFixed(0)+'k '+kts(closest)+' kts';
     tarDisp.style.color=closest.type==='mil'?'#f55':'#5af';
   }else{
-    tarDisp.textContent='TAR: -- --';
+    // Beam not intersecting any aircraft
+    tarDisp.textContent='TAR: -- -- --';
     tarDisp.style.color='#0ff';
   }
 }
@@ -819,14 +843,11 @@ function drawMiniGraph(){
   let ctx=c.getContext('2d'),W=c.width,H=c.height;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   let pad={l:6,r:6,t:5,b:8},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b,altMax=50;
-  // Subtle grid lines only
   ctx.strokeStyle='rgba(0,255,136,0.12)';ctx.lineWidth=0.5;
   for(let v=0;v<=altMax;v+=25){let gy=pad.t+gH-(v/altMax)*gH;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+gW,gy);ctx.stroke();}
-  // Axes
   ctx.strokeStyle='#00ff88';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.stroke();
   ctx.beginPath();ctx.moveTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
-  // Needle
   let ox=pad.l,oy=pad.t+gH,lineLen=Math.min(gW,gH)*0.92;
   let angleRad=(S.altEl/altMax)*85*(Math.PI/180);
   let tipX=ox+lineLen*Math.cos(angleRad),tipY=oy-lineLen*Math.sin(angleRad);
@@ -859,7 +880,6 @@ function animate(){
     t.hdg=((Math.atan2(t.vx,-t.vy)*180/Math.PI)+360)%360;
   });
   TARGETS=TARGETS.filter(t=>!S.destroyedIds.has(t.id));
-  // Remove aircraft that have drifted out of the radar boundary (natural exit)
   TARGETS=TARGETS.filter(t=>{
     let d=Math.sqrt(t.x*t.x+t.y*t.y);
     if(d>1.15){if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){S.locked=false;S.lockTarget=null;applyLockUI();}return false;}
