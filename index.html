@@ -2,9 +2,45 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>SKYSTRIKER-BRAVO</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;min-height:100%;background:#1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;}
+
+/* ── PORTRAIT BLOCKER ── */
+#portrait-blocker{
+  display:none;
+  position:fixed;inset:0;z-index:9999;
+  background:#000;
+  align-items:center;justify-content:center;flex-direction:column;gap:16px;
+  font-family:'Courier New',monospace;color:#0f0;text-align:center;
+}
+#portrait-blocker svg{animation:spin 2s linear infinite;}
+@keyframes spin{to{transform:rotate(90deg);}}
+@media (orientation:portrait) and (max-width:900px){
+  #portrait-blocker{display:flex;}
+}
+
+html,body{
+  width:100%;min-height:100%;
+  background:#1a1a1a;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;
+  touch-action:pan-y;
+}
+
+/* ── SCALE WRAPPER ── */
+#scale-wrap{
+  width:980px;
+  transform-origin:top center;
+  /* JS will set the scale via --ui-scale */
+  transform:scale(var(--ui-scale,1));
+  margin-bottom:calc((var(--ui-scale,1) - 1) * -980px);/* collapse gap when scaled down */
+}
+
 .panel{background:#2a2a2a;border:3px solid #555;border-radius:8px;padding:7px;font-family:'Courier New',monospace;color:#0f0;width:980px;margin:20px auto 0 auto;}
 .pi{background:#222;border:2px solid #444;border-radius:4px;padding:5px;}
 .screen-box{background:#000;border:3px solid #444;position:relative;overflow:hidden;}
@@ -30,9 +66,29 @@ html,body{width:100%;min-height:100%;background:#1a1a1a;display:flex;flex-direct
 .fire-guard{width:38px;height:48px;background:#8B0000;border:3px solid #f00;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .fire-inner{width:30px;height:38px;background:#cc0000;border:2px solid #f00;border-radius:3px;}
 .lock-body{background:#8B6914;border:2px solid #a88020;padding:4px 7px;font-size:10px;color:#ffe;font-weight:bold;text-align:center;}
+
+/* touch-friendly tap targets on mobile */
+@media (max-width:900px){
+  .sw-group,.batt-btn,.fire-guard,.lock-body,.beam-opt,.mc{
+    -webkit-tap-highlight-color:rgba(0,255,0,0.15);
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- PORTRAIT BLOCKER -->
+<div id="portrait-blocker">
+  <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+    <rect x="16" y="4" width="24" height="38" rx="3" stroke="#0f0" stroke-width="2.5"/>
+    <circle cx="28" cy="37" r="2" fill="#0f0"/>
+    <path d="M6 28 L50 28 M42 20 L50 28 L42 36" stroke="#0f0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div style="font-size:15px;letter-spacing:3px;">ROTATE DEVICE</div>
+  <div style="font-size:11px;color:#555;letter-spacing:1px;">LANDSCAPE MODE REQUIRED</div>
+</div>
+
+<div id="scale-wrap">
 <div class="panel" id="mainPanel">
 <div class="pi">
 
@@ -42,7 +98,7 @@ html,body{width:100%;min-height:100%;background:#1a1a1a;display:flex;flex-direct
   <div id="vp-display" onclick="cycleVajra()" style="font-size:16px;color:#f90;letter-spacing:2px;font-family:'Courier New',monospace;cursor:pointer;text-align:right;user-select:none;" title="Click to cycle">VAJRAPRAHAAR VAJRAPRATIJANA</div>
 </div>
 
-<!-- TOP ROW: TAR | EWR | AER — equal columns, equal height -->
+<!-- TOP ROW: TAR | EWR | AER -->
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:5px;">
 
   <!-- LEFT: TAR screen -->
@@ -190,22 +246,150 @@ html,body{width:100%;min-height:100%;background:#1a1a1a;display:flex;flex-direct
 </div>
 </div>
 
-<script>
-/* ─────────────────────────────────────────────────────
-   Flight model: aircraft fly in CARTESIAN X,Y space
-   on the radar unit circle (radius 1.0 = edge of range).
-   Each plane has:
-     x, y       — position (-1..1 in radar-space)
-     vx, vy     — velocity (units/frame, very small)
-     hdg        — true heading degrees (0=N, 90=E)
-     alt        — altitude in thousands of feet
-     altRate    — feet/frame drift
-     type       — 'mil' or 'civ'
-     id, label
-   Planes enter from outside (dist > 1) and fly through.
-   When dist > 1.15 they are culled and a new one spawns.
-──────────────────────────────────────────────────────*/
+<!-- TUTORIAL BUTTON -->
+<div style="width:980px;margin:12px auto 0 auto;display:flex;justify-content:center;">
+  <button onclick="document.getElementById('tutorial-section').scrollIntoView({behavior:'smooth'})"
+    style="background:#111;border:2px solid #0a4;color:#0f0;font-family:'Courier New',monospace;font-size:13px;letter-spacing:3px;padding:8px 32px;cursor:pointer;text-transform:uppercase;border-radius:4px;transition:background 0.2s,box-shadow 0.2s;box-shadow:0 0 8px #0a422a;"
+    onmouseover="this.style.background='#0a2018';this.style.boxShadow='0 0 18px #0f0';"
+    onmouseout="this.style.background='#111';this.style.boxShadow='0 0 8px #0a422a';">
+    ▼ &nbsp; TUTORIAL &nbsp; ▼
+  </button>
+</div>
 
+<!-- TUTORIAL SECTION -->
+<section id="tutorial-section" style="width:980px;margin:32px auto 60px auto;font-family:'Courier New',monospace;color:#ccc;background:#111;border:2px solid #333;border-radius:8px;padding:32px 36px;line-height:1.7;">
+
+  <div style="border-bottom:2px solid #0a4;padding-bottom:12px;margin-bottom:28px;">
+    <div style="font-size:22px;color:#0f0;letter-spacing:4px;font-weight:bold;">OPERATOR GUIDE</div>
+    <div style="font-size:11px;color:#555;letter-spacing:2px;margin-top:4px;">SKYSTRIKER-BRAVO // FIELD REFERENCE</div>
+  </div>
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">01 &mdash; SYSTEM STARTUP</div>
+    <p style="margin-bottom:8px;">All three radar systems begin in the <span style="color:#f55;">OFF</span> state. You must power them on individually using the toggle switches on the left-side control panel.</p>
+    <ol style="padding-left:20px;color:#aaa;font-size:13px;">
+      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">EWR</span> switch to bring up the wide-area sweep. Contacts will begin appearing within seconds.</li>
+      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">TAR</span> switch to activate the Target Acquisition Radar.</li>
+      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">AER</span> switch to activate the Altitude Elevation Radar.</li>
+    </ol>
+    <p style="margin-top:8px;font-size:12px;color:#666;">All three must be ON for a full engagement solution.</p>
+  </div>
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">02 &mdash; EWR — EARLY WARNING RADAR</div>
+    <p style="margin-bottom:8px;">The EWR provides 360° surveillance. A rotating sweep arm continuously paints contacts on the display.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
+      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
+        <div style="color:#f55;font-size:11px;letter-spacing:2px;margin-bottom:6px;">▲ HOSTILE</div>
+        <p style="font-size:12px;color:#999;">Military-class contacts. Move faster and fly at higher altitudes. Prioritise for lock.</p>
+      </div>
+      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
+        <div style="color:#5af;font-size:11px;letter-spacing:2px;margin-bottom:6px;">● FRIENDLY</div>
+        <p style="font-size:12px;color:#999;">Civilian-class contacts. Slower, lower altitude. Avoid targeting.</p>
+      </div>
+    </div>
+    <p style="margin-top:10px;font-size:12px;color:#777;">Use the <span style="color:#0f0;">MODE</span> button below the EWR screen to toggle city name overlays on or off.</p>
+  </div>
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">03 &mdash; TAR — TARGET ACQUISITION RADAR</div>
+    <p style="margin-bottom:10px;">TAR is a narrow-FOV radar. Steer the crosshair by dragging on the TAR screen (touch) or WASD keys (keyboard).</p>
+    <div style="background:#0a0a0a;border:1px solid #222;padding:14px;border-radius:4px;">
+      <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:10px;">BEAM STEERING — KEYBOARD</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;max-width:300px;">
+        <div></div>
+        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">W<br><span style="font-size:10px;color:#666;">UP</span></div>
+        <div></div><div></div>
+        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">A<br><span style="font-size:10px;color:#666;">LEFT</span></div>
+        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">S<br><span style="font-size:10px;color:#666;">DOWN</span></div>
+        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">D<br><span style="font-size:10px;color:#666;">RIGHT</span></div>
+        <div></div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:#0f0;">📱 MOBILE: Drag finger on TAR screen to steer beam.</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">04 &mdash; AER — ALTITUDE ELEVATION RADAR</div>
+    <p style="margin-bottom:8px;">The AER displays a vertical cross-section. Align the beam to the target's altitude band.</p>
+    <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
+      <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:8px;">ELEVATION KEYS / TOUCH</div>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div style="background:#1a1a1a;border:1px solid #444;padding:8px 14px;border-radius:3px;color:#0f0;text-align:center;"><span style="font-size:16px;">8</span><br><span style="font-size:10px;color:#666;">RAISE</span></div>
+        <div style="background:#1a1a1a;border:1px solid #444;padding:8px 14px;border-radius:3px;color:#0f0;text-align:center;"><span style="font-size:16px;">2</span><br><span style="font-size:10px;color:#666;">LOWER</span></div>
+        <div style="font-size:11px;color:#0f0;">📱 MOBILE: Drag finger up/down on AER screen.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">05 &mdash; ACQUIRING A LOCK</div>
+    <ol style="padding-left:20px;color:#aaa;font-size:13px;">
+      <li style="margin-bottom:8px;">Power on <span style="color:#0f0;">EWR</span>, <span style="color:#0f0;">TAR</span> and <span style="color:#0f0;">AER</span>.</li>
+      <li style="margin-bottom:8px;">Steer the TAR beam (WASD / drag) until it overlaps a contact on the EWR.</li>
+      <li style="margin-bottom:8px;">Adjust AER elevation (<span style="color:#0f0;">8 / 2</span> or drag) until the marker aligns with the contact's altitude.</li>
+      <li style="margin-bottom:8px;">The status bar will flash <span style="color:#ff0;">TAR+ALT ALIGNED</span>. Press <span style="color:#0f0;">X</span> or tap LOCK to engage.</li>
+      <li style="margin-bottom:8px;">The crosshair turns <span style="color:#ff0;">yellow</span> and tracks the target.</li>
+    </ol>
+  </div>
+
+  <div style="margin-bottom:30px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">06 &mdash; AGNIBAAN FIRE CONTROL</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
+        <div style="color:#0f0;font-size:11px;letter-spacing:2px;margin-bottom:6px;">FIRE — KEY N / TAP FIRE BUTTON</div>
+        <p style="font-size:12px;color:#999;">With target locked, press N or tap the red FIRE button. One round consumed per shot.</p>
+      </div>
+      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
+        <div style="color:#f90;font-size:11px;letter-spacing:2px;margin-bottom:6px;">REARM</div>
+        <p style="font-size:12px;color:#999;">Tap REARM to reload all 8 missiles instantly.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:10px;">
+    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">07 &mdash; HEADER DISPLAY</div>
+    <p style="margin-bottom:8px;">The <span style="color:#f90;">VAJRAPRAHAAR VAJRAPRATIJANA</span> phrase cycles through operational mottos. Tap it to step through manually.</p>
+  </div>
+
+  <div style="border-top:1px solid #222;padding-top:16px;margin-top:10px;font-size:11px;color:#444;letter-spacing:1px;text-align:center;">
+    SKYSTRIKER-BRAVO S/N:322A1 &nbsp;|&nbsp; OPERATOR GUIDE &nbsp;|&nbsp; FOR AUTHORISED USE ONLY
+  </div>
+
+</section>
+</div><!-- /scale-wrap -->
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   MOBILE SCALING + ORIENTATION
+══════════════════════════════════════════════════════════ */
+function applyScale(){
+  let vw=window.innerWidth, vh=window.innerHeight;
+  // In landscape the relevant constraint is the viewport width vs 980
+  let scale=Math.min(vw/980, 1); // never upscale beyond 1 on desktop
+  // Also make sure it fits vertically (UI is about 600px + tutorial)
+  document.getElementById('scale-wrap').style.setProperty('--ui-scale', scale);
+  document.getElementById('scale-wrap').style.transform='scale('+scale+')';
+  // Collapse negative margin so content below isn't floating
+  let panelH=980; // approximate scaled height we care about
+  document.getElementById('scale-wrap').style.marginBottom='0';
+}
+window.addEventListener('resize', applyScale);
+window.addEventListener('orientationchange', ()=>setTimeout(applyScale,200));
+applyScale();
+
+// Try to lock orientation to landscape on supported browsers
+(function tryLockOrientation(){
+  try{
+    if(screen.orientation && screen.orientation.lock){
+      screen.orientation.lock('landscape').catch(()=>{});
+    }
+  }catch(e){}
+})();
+
+/* ══════════════════════════════════════════════════════════
+   GAME STATE
+══════════════════════════════════════════════════════════ */
 const S={
   ewrOn:false, tarOn:false, aerOn:false,
   locked:false, beam:'standard', showLabels:true,
@@ -235,22 +419,19 @@ const CITIES=[
 const MIL_LABELS=['GORTHEX','VALDRIS','MORTHEX','HELIX-9','STRIKER','WRAITH-2','TALON'];
 const CIV_LABELS=['ARELION AIR','CRESTAVIA 4','VELSTRAAT 7','NORDEX 51','ALTA WINGS','ORBIS 88'];
 
-// Speed in radar-units per frame: reduced for slower, more realistic motion
 function randSpeed(type){ return type==='mil' ? 0.00010+Math.random()*0.00006 : 0.00005+Math.random()*0.00004; }
 
 function spawnAircraft(){
   let type = Math.random()<0.45 ? 'mil' : 'civ';
-  // Enter from a random point on the edge (circle of radius 1.05)
   let entryAngle = Math.random()*Math.PI*2;
   let x = Math.cos(entryAngle)*1.05;
   let y = Math.sin(entryAngle)*1.05;
-  // Heading: bias towards center with some randomness so it crosses the radar
-  let towardCenter = Math.atan2(-y, -x); // angle pointing to (0,0)
-  let hdgRad = towardCenter + (Math.random()-0.5)*1.2; // ±~35° spread
+  let towardCenter = Math.atan2(-y, -x);
+  let hdgRad = towardCenter + (Math.random()-0.5)*1.2;
   let spd = randSpeed(type);
   let vx = Math.cos(hdgRad)*spd;
   let vy = Math.sin(hdgRad)*spd;
-  let hdgDeg = ((Math.atan2(vx, -vy)*180/Math.PI)+360)%360; // N=0
+  let hdgDeg = ((Math.atan2(vx, -vy)*180/Math.PI)+360)%360;
   let milIdx = Math.floor(Math.random()*MIL_LABELS.length);
   let civIdx = Math.floor(Math.random()*CIV_LABELS.length);
   let id = (type==='mil'?'F':'C')+S.nextId++;
@@ -260,31 +441,28 @@ function spawnAircraft(){
     altRate: (Math.random()-0.5)*0.002,
     hdg: hdgDeg,
     label: type==='mil' ? MIL_LABELS[milIdx] : CIV_LABELS[civIdx],
-    // small heading wander to simulate natural flight path
     hdgWander: (Math.random()-0.5)*0.00015,
-    // fade-in on entry
     born: Date.now()
   };
 }
 
-// Initial population: spread across the radar
 let TARGETS=[];
 for(let i=0;i<4;i++){
   let t=spawnAircraft();
-  // Place them inside the radar randomly instead of at edge
   let r=0.2+Math.random()*0.7;
   let a=Math.random()*Math.PI*2;
   t.x=Math.cos(a)*r; t.y=Math.sin(a)*r;
   TARGETS.push(t);
 }
 
-// Spawn new aircraft every 18–30 seconds
 let lastSpawn=Date.now();
 let spawnInterval=18000+Math.random()*12000;
 
 function liveTargets(){ return TARGETS.filter(t=>!S.destroyedIds.has(t.id)); }
 
-/* ── CONTROL FUNCTIONS ─── */
+/* ══════════════════════════════════════════════════════════
+   CONTROL FUNCTIONS
+══════════════════════════════════════════════════════════ */
 function toggleSw(w){
   S[w+'On']=!S[w+'On']; let on=S[w+'On'];
   document.getElementById(w+'-knob').className='knob '+(on?'on':'off');
@@ -316,7 +494,6 @@ function updateGrid(){
   document.getElementById('mc-count').textContent=n;
 }
 
-/* az = degrees from radar center, where 0°=East, like Math.atan2 */
 function targetAz(t){ return ((Math.atan2(t.y,t.x)*180/Math.PI)+360)%360; }
 function targetDist(t){ return Math.sqrt(t.x*t.x+t.y*t.y); }
 
@@ -373,7 +550,6 @@ function toggleCityMode(){
   document.getElementById('mode-btn').style.color=S.showCities?'#0f0':'#666';
 }
 
-/* Vajra cycling phrases */
 const VAJRA_LINES=[
   'VAJRAPRAHAAR VAJRAPRATIJANA',
   'VAJRAPRAHAARAH VAJRAPRATIGYA',
@@ -386,7 +562,6 @@ function cycleVajra(){
   vajraIdx=(vajraIdx+1)%VAJRA_LINES.length;
   document.getElementById('vp-display').textContent=VAJRA_LINES[vajraIdx];
 }
-// Cycle through all lines on page load with a timed reveal
 (function initVajra(){
   let i=0;
   function step(){
@@ -397,19 +572,113 @@ function cycleVajra(){
   setTimeout(step,400);
 })();
 
-/* Mini graph — angle line */
-
 function updateStatus(){
   if(S.locked){flash('TARGET LOCKED: '+S.lockTarget.id+' — PRESS N TO FIRE');return;}
   let al=(S.tarOn&&S.ewrOn)?checkAlign():null;
-  if(al) flash('TAR+ALT ALIGNED ON '+al.id+' ('+al.label+') — PRESS X TO LOCK');
-  else if(S.tarOn&&S.ewrOn) flash('EWR+TAR ONLINE — SCANNING. WASD=TAR  8/2=ALT  X=LOCK  N=FIRE');
-  else if(S.tarOn) flash('TAR ONLINE — WASD TO STEER BEAM');
+  if(al) flash('TAR+ALT ALIGNED ON '+al.id+' ('+al.label+') — TAP LOCK / PRESS X');
+  else if(S.tarOn&&S.ewrOn) flash('EWR+TAR ONLINE — DRAG TAR SCREEN / WASD=TAR  DRAG AER / 8/2=ALT  X=LOCK  N=FIRE');
+  else if(S.tarOn) flash('TAR ONLINE — DRAG TAR SCREEN TO STEER BEAM');
   else if(S.ewrOn) flash('EWR ONLINE — RADAR SWEEPING');
   else flash('SYSTEM STANDBY — EWR AND TAR OFFLINE');
 }
 
-/* ── EWR ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   TOUCH CONTROLS — TAR (crosshair drag)
+══════════════════════════════════════════════════════════ */
+(function setupTARTouch(){
+  let tarScreen=document.getElementById('tar-screen');
+  let dragging=false;
+  let lastX=0, lastY=0;
+
+  function getCanvasCoords(e){
+    let rect=tarScreen.getBoundingClientRect();
+    let t=e.touches?e.touches[0]:e;
+    // Account for CSS scaling of the wrapper
+    let scale=parseFloat(document.getElementById('scale-wrap').style.transform.replace(/[^0-9.]/g,''))||1;
+    return {
+      x:(t.clientX-rect.left)/scale,
+      y:(t.clientY-rect.top)/scale
+    };
+  }
+
+  tarScreen.addEventListener('touchstart',e=>{
+    if(!S.tarOn)return;
+    e.preventDefault();
+    dragging=true;
+    let c=getCanvasCoords(e);
+    lastX=c.x; lastY=c.y;
+  },{passive:false});
+
+  tarScreen.addEventListener('touchmove',e=>{
+    if(!dragging||!S.tarOn)return;
+    e.preventDefault();
+    let c=getCanvasCoords(e);
+    let dx=c.x-lastX;
+    let dy=c.y-lastY;
+    lastX=c.x; lastY=c.y;
+
+    // Map pixel delta → azimuth/elevation delta
+    // TAR canvas is ~165px wide for fovH=60° standard
+    let canvas=document.getElementById('tarCanvas');
+    let W=canvas.width||165, H=canvas.height||240;
+    let fovH=S.beam==='narrow'?20:60;
+    let fovV=S.beam==='narrow'?14:40;
+
+    // dx in pixels → fraction of half-width → degrees azimuth
+    let azDelta=(dx/(W/2))*fovH;
+    let elDelta=-(dy/(H/2))*fovV;
+
+    S.tarAz=((S.tarAz+azDelta)%360+360)%360;
+    S.tarEl=Math.max(0,Math.min(45,S.tarEl+elDelta));
+  },{passive:false});
+
+  tarScreen.addEventListener('touchend',e=>{dragging=false;},{passive:false});
+  tarScreen.addEventListener('touchcancel',e=>{dragging=false;},{passive:false});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   TOUCH CONTROLS — AER (altitude drag)
+══════════════════════════════════════════════════════════ */
+(function setupAERTouch(){
+  let aerScreen=document.getElementById('aer-screen');
+  let dragging=false;
+  let lastY=0;
+
+  function getClientY(e){
+    let t=e.touches?e.touches[0]:e;
+    return t.clientY;
+  }
+
+  aerScreen.addEventListener('touchstart',e=>{
+    if(!S.aerOn)return;
+    e.preventDefault();
+    dragging=true;
+    lastY=getClientY(e);
+  },{passive:false});
+
+  aerScreen.addEventListener('touchmove',e=>{
+    if(!dragging||!S.aerOn)return;
+    e.preventDefault();
+    let cy=getClientY(e);
+    let dy=cy-lastY;
+    lastY=cy;
+
+    // AER canvas ~240px for altMax=50k
+    let canvas=document.getElementById('aerCanvas');
+    let H=canvas.height||240;
+    let altMax=50;
+    // dragging UP = finger moves up = negative dy = higher altitude
+    let altDelta=-(dy/H)*altMax*2;
+    S.altEl=Math.max(0,Math.min(altMax,S.altEl+altDelta));
+  },{passive:false});
+
+  aerScreen.addEventListener('touchend',e=>{dragging=false;},{passive:false});
+  aerScreen.addEventListener('touchcancel',e=>{dragging=false;},{passive:false});
+})();
+
+/* ══════════════════════════════════════════════════════════
+   DRAW — EWR
+══════════════════════════════════════════════════════════ */
 function drawEWR(){
   let canvas=document.getElementById('ewrCanvas');
   let rect=document.getElementById('ewr-screen').getBoundingClientRect();
@@ -427,7 +696,6 @@ function drawEWR(){
   document.getElementById('ewr-slbl').textContent='ON';
   let cx=W/2,cy=H/2,r=Math.min(cx,cy)-14;
 
-  // rings & spokes
   ctx.strokeStyle='#0a4';ctx.lineWidth=0.5;
   for(let i=1;i<=4;i++){ctx.beginPath();ctx.arc(cx,cy,r*i/4,0,Math.PI*2);ctx.stroke();}
   for(let a=0;a<360;a+=30){
@@ -437,7 +705,6 @@ function drawEWR(){
     ctx.fillText(a,cx+Math.cos(rad)*(r+10),cy+Math.sin(rad)*(r+10));
   }
 
-  // Sweep
   S.ewrSweep+=0.007;if(S.ewrSweep>Math.PI*2)S.ewrSweep-=Math.PI*2;
   for(let i=0;i<12;i++){
     let ang=S.ewrSweep-i*0.035;
@@ -447,9 +714,7 @@ function drawEWR(){
   ctx.strokeStyle='rgba(0,255,60,0.9)';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(S.ewrSweep)*r,cy+Math.sin(S.ewrSweep)*r);ctx.stroke();
 
-  // Missiles
   S.activemissiles.forEach(m=>{
-    // missile travels from center to target current position
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
     let tx=cx+tgt.x*r, ty=cy+tgt.y*r;
     let mx=cx+(tx-cx)*m.progress, my=cy+(ty-cy)*m.progress;
@@ -464,13 +729,11 @@ function drawEWR(){
     ctx.strokeStyle='#ff8800';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mx,my,7,0,Math.PI*2);ctx.stroke();
   });
 
-  // Targets
   liveTargets().forEach(t=>{
     let tx=cx+t.x*r, ty=cy+t.y*r;
     let trad=Math.atan2(t.y,t.x);
     let diff=((S.ewrSweep-trad)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
     let alpha=diff<0.25?1:Math.max(0,1-diff/(Math.PI*1.4));
-    // also fade in on birth
     let age=(Date.now()-t.born)/1000;
     alpha*=Math.min(1,age/2);
     if(alpha>0.04){
@@ -499,18 +762,19 @@ function drawEWR(){
     }
   });
 
-  // City dots
   if(S.showCities){
-  CITIES.forEach(c=>{
-    let px=cx+c.ax*r,py=cy+c.ay*r;
-    ctx.fillStyle='#bbb';ctx.font='9px Arial';
-    ctx.fillText('•',px-3,py);
-    ctx.fillText(c.name,px+4,py);
-  });
+    CITIES.forEach(c=>{
+      let px=cx+c.ax*r,py=cy+c.ay*r;
+      ctx.fillStyle='#bbb';ctx.font='9px Arial';
+      ctx.fillText('•',px-3,py);
+      ctx.fillText(c.name,px+4,py);
+    });
   }
 }
 
-/* ── TAR ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   DRAW — TAR
+══════════════════════════════════════════════════════════ */
 function drawTAR(){
   let canvas=document.getElementById('tarCanvas');
   let rect=document.getElementById('tar-screen').getBoundingClientRect();
@@ -521,6 +785,9 @@ function drawTAR(){
     ctx.fillStyle='#0a0';ctx.font='10px Courier New';ctx.textAlign='center';
     ctx.fillText('TARGET ACQ RADAR',W/2,H/2-10);
     ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+8);
+    // Touch hint
+    ctx.fillStyle='#333';ctx.font='9px Courier New';ctx.textAlign='center';
+    ctx.fillText('DRAG TO STEER',W/2,H/2+28);
     document.getElementById('tar-slbl').style.color='#f00';
     document.getElementById('tar-slbl').textContent='OFF';return;
   }
@@ -529,7 +796,6 @@ function drawTAR(){
   let cx=W/2,cy=H/2;
   let fovH=S.beam==='narrow'?20:60,fovV=S.beam==='narrow'?14:40;
 
-  // Grid lines
   ctx.strokeStyle='#0a4';ctx.lineWidth=0.5;
   for(let g=-fovV;g<=fovV;g+=Math.round(fovV/4)){
     let y=cy+(g/fovV)*(H/2-10);
@@ -548,7 +814,6 @@ function drawTAR(){
   ctx.beginPath();ctx.moveTo(8,cy);ctx.lineTo(W-8,cy);ctx.stroke();
   ctx.setLineDash([]);
 
-  // Missile glow
   S.activemissiles.forEach(m=>{
     if(!S.lockTarget||m.targetId!==S.lockTarget.id)return;
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
@@ -593,7 +858,6 @@ function drawTAR(){
     }
   });
 
-  // Crosshair: when locked, stick to locked target position; otherwise stay at center
   let chx=cx, chy=cy;
   if(S.locked&&S.lockTarget){
     let lt=liveTargets().find(t=>t.id===S.lockTarget.id);
@@ -607,13 +871,11 @@ function drawTAR(){
       }
     }
   }
-  // Draw crosshair
   let chColor=S.locked?'#ff0':'#0f0';
-  ctx.strokeStyle=chColor;ctx.lineWidth=S.locked?2:2;
+  ctx.strokeStyle=chColor;ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(chx-7,chy);ctx.lineTo(chx+7,chy);ctx.stroke();
   ctx.beginPath();ctx.moveTo(chx,chy-7);ctx.lineTo(chx,chy+7);ctx.stroke();
   if(S.locked){
-    // Pulsing outer ring on crosshair when tracking
     let p=0.5+0.5*Math.sin(Date.now()*0.008);
     ctx.strokeStyle='rgba(255,220,0,'+p+')';ctx.lineWidth=1;
     ctx.beginPath();ctx.arc(chx,chy,10,0,Math.PI*2);ctx.stroke();
@@ -621,11 +883,20 @@ function drawTAR(){
   ctx.fillStyle='#0a0';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
   ctx.fillText('AZ:'+S.tarAz.toFixed(1)+'°',4,12);
   ctx.fillText('EL:'+S.tarEl.toFixed(1)+'°',4,22);
+
+  // Drag hint overlay (faint)
+  if(S.tarOn){
+    ctx.fillStyle='rgba(0,80,0,0.3)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    ctx.fillText('◀ DRAG ▶',cx,H-4);
+  }
+
   document.getElementById('hdg-d').textContent=S.tarAz.toFixed(2).padStart(6,'0');
   document.getElementById('elev-d').textContent=S.tarEl.toFixed(2).padStart(5,'0');
 }
 
-/* ── AER ─────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   DRAW — AER
+══════════════════════════════════════════════════════════ */
 function drawAER(){
   let canvas=document.getElementById('aerCanvas');
   let rect=document.getElementById('aer-screen').getBoundingClientRect();
@@ -636,6 +907,8 @@ function drawAER(){
     ctx.fillStyle='#0a0';ctx.font='10px Courier New';ctx.textAlign='center';
     ctx.fillText('ALT ELEV RADAR',W/2,H/2-10);
     ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+8);
+    ctx.fillStyle='#333';ctx.font='9px Courier New';ctx.textAlign='center';
+    ctx.fillText('DRAG TO ADJUST',W/2,H/2+28);
     document.getElementById('aer-slbl').style.color='#f00';
     document.getElementById('aer-slbl').textContent='OFF';return;
   }
@@ -687,10 +960,17 @@ function drawAER(){
   ctx.beginPath();ctx.moveTo(14,beamCY);ctx.lineTo(28,beamCY);ctx.stroke();
   ctx.fillStyle='#0aa';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
   ctx.fillText('EL:'+S.altEl.toFixed(1)+'k',28,13);
+
+  // Drag hint
+  ctx.fillStyle='rgba(0,60,60,0.4)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('▲ DRAG ▼',W/2,H-4);
+
   document.getElementById('alt-d').textContent=S.altEl.toFixed(2).padStart(5,'0');
 }
 
-/* ── MINI GRAPH ──────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   DRAW — MINI GRAPH
+══════════════════════════════════════════════════════════ */
 function drawMiniGraph(){
   let canvas=document.getElementById('miniGraphCanvas');
   let wrap=document.getElementById('aer-mini-wrap');
@@ -703,65 +983,53 @@ function drawMiniGraph(){
   let gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
   let altMax=50;
 
-  // Faint grid lines
   ctx.strokeStyle='rgba(0,255,136,0.12)';ctx.lineWidth=0.5;
   for(let v=0;v<=altMax;v+=25){
     let gy=pad.t+gH-(v/altMax)*gH;
     ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+gW,gy);ctx.stroke();
   }
 
-  // Axes — neon green
   ctx.strokeStyle='#00ff88';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.stroke();
   ctx.beginPath();ctx.moveTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
 
-  // Y axis labels
   ctx.fillStyle='#00ff88';ctx.font='6px Courier New';ctx.textAlign='right';ctx.textBaseline='middle';
   for(let v=0;v<=altMax;v+=25){
     let gy=pad.t+gH-(v/altMax)*gH;
     ctx.fillText(v,pad.l-2,gy);
   }
-  // X axis label
   ctx.fillStyle='#00ff88';ctx.textAlign='center';ctx.textBaseline='top';ctx.font='6px Courier New';
   ctx.fillText('EL°',pad.l+gW/2,H-9);
 
-  // Fixed-length rotating line: origin at bottom-left corner of plot area
-  // angle sweeps from straight-up (90°=altMax) to flat-right (0°=alt0)
-  // angle = (altEl/altMax) * 90 degrees → mapped to canvas angle
   let ox=pad.l, oy=pad.t+gH;
-  let lineLen=Math.min(gW,gH)*0.92; // fixed length, never changes
-  let angleDeg=(S.altEl/altMax)*85; // 0° when alt=0 (flat), 85° when alt=max (steep up)
+  let lineLen=Math.min(gW,gH)*0.92;
+  let angleDeg=(S.altEl/altMax)*85;
   let angleRad=angleDeg*(Math.PI/180);
-  // In canvas: x goes right (+cos), y goes up (-sin)
   let tipX=ox+lineLen*Math.cos(angleRad);
   let tipY=oy-lineLen*Math.sin(angleRad);
 
-  // Subtle arc guide
   ctx.strokeStyle='rgba(0,255,136,0.18)';ctx.lineWidth=1;
   ctx.beginPath();ctx.arc(ox,oy,lineLen,-(85*Math.PI/180),0);ctx.stroke();
 
-  // Yellow line — fixed length, rotates with angle
   ctx.strokeStyle='#ffee00';ctx.lineWidth=2;ctx.setLineDash([]);
   ctx.shadowColor='#ffee00';ctx.shadowBlur=4;
   ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tipX,tipY);ctx.stroke();
   ctx.shadowBlur=0;
 
-  // Glow dot at tip
   ctx.fillStyle='#ffee00';ctx.shadowColor='#ffee00';ctx.shadowBlur=6;
   ctx.beginPath();ctx.arc(tipX,tipY,2.5,0,Math.PI*2);ctx.fill();
   ctx.shadowBlur=0;
 
-  // Origin dot
   ctx.fillStyle='#00ff88';ctx.beginPath();ctx.arc(ox,oy,2,0,Math.PI*2);ctx.fill();
 
-  // Angle readout
   ctx.fillStyle='#ffee00';ctx.font='6px Courier New';ctx.textAlign='left';ctx.textBaseline='top';
   ctx.fillText(S.altEl.toFixed(0)+'k',pad.l+2,pad.t);
 }
 
-/* ── ANIMATE ─────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   ANIMATION LOOP
+══════════════════════════════════════════════════════════ */
 function animate(){
-  // Keyboard pan
   if(S.keys['a']||S.keys['A'])S.tarAz-=0.2;
   if(S.keys['d']||S.keys['D'])S.tarAz+=0.2;
   if(S.keys['w']||S.keys['W'])S.tarEl=Math.min(45,S.tarEl+0.15);
@@ -770,13 +1038,11 @@ function animate(){
   if(S.keys['2'])S.altEl=Math.max(0,S.altEl-0.08);
   S.tarAz=((S.tarAz%360)+360)%360;
 
-  // Move aircraft — steer back when approaching radar edge so they stay inside
   liveTargets().forEach(t=>{
     let speed=Math.sqrt(t.vx*t.vx+t.vy*t.vy);
     let ang=Math.atan2(t.vy,t.vx);
     let dist=targetDist(t);
     if(dist>0.82){
-      // Gradually turn toward center as plane nears edge
       let toCenter=Math.atan2(-t.y,-t.x);
       let diff=toCenter-ang;
       while(diff>Math.PI)diff-=Math.PI*2;
@@ -784,26 +1050,21 @@ function animate(){
       let turnStrength=((dist-0.82)/0.18)*0.012;
       ang+=diff*turnStrength;
     } else {
-      // Normal gentle wander inside safe zone
       ang+=t.hdgWander;
     }
     t.vx=Math.cos(ang)*speed;
     t.vy=Math.sin(ang)*speed;
     t.x+=t.vx;
     t.y+=t.vy;
-    // Hard clamp if somehow still drifting outside
     let d2=targetDist(t);
     if(d2>0.97){t.x*=0.97/d2;t.y*=0.97/d2;}
-    // Altitude gentle drift
     t.alt+=t.altRate;
     if(t.alt>48||t.alt<8)t.altRate*=-1;
     t.hdg=((Math.atan2(t.vx,-t.vy)*180/Math.PI)+360)%360;
   });
 
-  // Purge destroyed targets
   TARGETS=TARGETS.filter(t=>!S.destroyedIds.has(t.id));
 
-  // Spawn new aircraft inside radar
   let now=Date.now();
   if(now-lastSpawn>spawnInterval && TARGETS.filter(t=>!S.destroyedIds.has(t.id)).length<6){
     let nt=spawnAircraft();
@@ -814,18 +1075,15 @@ function animate(){
     spawnInterval=18000+Math.random()*12000;
   }
 
-  // Update lock target reference
   if(S.locked&&S.lockTarget){
     let lt=TARGETS.find(t=>t.id===S.lockTarget.id&&!S.destroyedIds.has(t.id));
     if(lt)S.lockTarget=lt;
   }
 
-  // Advance missiles
   S.activemissiles=S.activemissiles.filter(m=>{
     m.progress+=0.003;
     if(m.progress>=1){
       S.destroyedIds.add(m.targetId);
-      // Remove target from array immediately
       TARGETS=TARGETS.filter(t=>t.id!==m.targetId);
       flash('MISSILE IMPACT ON '+m.targetId+' — TARGET DESTROYED!');
       if(S.lockTarget&&S.lockTarget.id===m.targetId){S.locked=false;S.lockTarget=null;applyLockUI();}
@@ -836,7 +1094,7 @@ function animate(){
 
   drawEWR();drawTAR();drawAER();drawMiniGraph();
   let al=(S.tarOn&&S.ewrOn)?checkAlign():null;
-  if(al&&!S.locked)flash('TAR+ALT ALIGNED ON '+al.id+' ('+al.label+') — PRESS X TO LOCK');
+  if(al&&!S.locked)flash('TAR+ALT ALIGNED ON '+al.id+' ('+al.label+') — TAP LOCK / PRESS X');
   requestAnimationFrame(animate);
 }
 
@@ -851,130 +1109,5 @@ window.addEventListener('keyup',e=>{S.keys[e.key]=false;});
 
 animate();
 </script>
-
-<!-- TUTORIAL BUTTON — outside the console panel -->
-<div style="width:980px;margin:12px auto 0 auto;display:flex;justify-content:center;">
-  <button onclick="document.getElementById('tutorial-section').scrollIntoView({behavior:'smooth'})"
-    style="background:#111;border:2px solid #0a4;color:#0f0;font-family:'Courier New',monospace;font-size:13px;letter-spacing:3px;padding:8px 32px;cursor:pointer;text-transform:uppercase;border-radius:4px;transition:background 0.2s,box-shadow 0.2s;box-shadow:0 0 8px #0a422a;"
-    onmouseover="this.style.background='#0a2018';this.style.boxShadow='0 0 18px #0f0';"
-    onmouseout="this.style.background='#111';this.style.boxShadow='0 0 8px #0a422a';">
-    ▼ &nbsp; TUTORIAL &nbsp; ▼
-  </button>
-</div>
-
-<!-- TUTORIAL SECTION — lives outside the UI console -->
-<section id="tutorial-section" style="width:980px;margin:32px auto 60px auto;font-family:'Courier New',monospace;color:#ccc;background:#111;border:2px solid #333;border-radius:8px;padding:32px 36px;line-height:1.7;">
-
-  <div style="border-bottom:2px solid #0a4;padding-bottom:12px;margin-bottom:28px;">
-    <div style="font-size:22px;color:#0f0;letter-spacing:4px;font-weight:bold;">OPERATOR GUIDE</div>
-    <div style="font-size:11px;color:#555;letter-spacing:2px;margin-top:4px;">SKYSTRIKER-BRAVO // FIELD REFERENCE</div>
-  </div>
-
-  <!-- SECTION 1: STARTUP -->
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">01 &mdash; SYSTEM STARTUP</div>
-    <p style="margin-bottom:8px;">All three radar systems begin in the <span style="color:#f55;">OFF</span> state. You must power them on individually using the toggle switches on the left-side control panel.</p>
-    <ol style="padding-left:20px;color:#aaa;font-size:13px;">
-      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">EWR</span> switch to bring up the wide-area sweep. Contacts will begin appearing within seconds.</li>
-      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">TAR</span> switch to activate the Target Acquisition Radar.</li>
-      <li style="margin-bottom:6px;">Flip the <span style="color:#0f0;">AER</span> switch to activate the Altitude Elevation Radar.</li>
-    </ol>
-    <p style="margin-top:8px;font-size:12px;color:#666;">All three must be ON for a full engagement solution.</p>
-  </div>
-
-  <!-- SECTION 2: EWR -->
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">02 &mdash; EWR — EARLY WARNING RADAR</div>
-    <p style="margin-bottom:8px;">The EWR provides 360° surveillance. A rotating sweep arm continuously paints contacts on the display.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
-      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-        <div style="color:#f55;font-size:11px;letter-spacing:2px;margin-bottom:6px;">▲ HOSTILE</div>
-        <p style="font-size:12px;color:#999;">Military-class contacts. Move faster and fly at higher altitudes. Prioritise for lock.</p>
-      </div>
-      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-        <div style="color:#5af;font-size:11px;letter-spacing:2px;margin-bottom:6px;">● FRIENDLY</div>
-        <p style="font-size:12px;color:#999;">Civilian-class contacts. Slower, lower altitude. Avoid targeting.</p>
-      </div>
-    </div>
-    <p style="margin-top:10px;font-size:12px;color:#777;">Use the <span style="color:#0f0;">MODE</span> button below the EWR screen to toggle city name overlays on or off.</p>
-  </div>
-
-  <!-- SECTION 3: TAR -->
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">03 &mdash; TAR — TARGET ACQUISITION RADAR</div>
-    <p style="margin-bottom:10px;">TAR is a narrow-FOV radar. Use it to steer your beam onto a contact visible on the EWR. The crosshair must be over the contact to achieve a lock.</p>
-    <div style="background:#0a0a0a;border:1px solid #222;padding:14px;border-radius:4px;">
-      <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:10px;">BEAM STEERING KEYS</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;max-width:300px;">
-        <div></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">W<br><span style="font-size:10px;color:#666;">UP</span></div>
-        <div></div><div></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">A<br><span style="font-size:10px;color:#666;">LEFT</span></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">S<br><span style="font-size:10px;color:#666;">DOWN</span></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:6px;border-radius:3px;color:#0f0;">D<br><span style="font-size:10px;color:#666;">RIGHT</span></div>
-        <div></div>
-      </div>
-    </div>
-    <p style="margin-top:10px;font-size:12px;color:#777;">The beam mode (NARROW / STANDARD) can be changed from the right control column. NARROW gives better resolution at the cost of a smaller field of view.</p>
-  </div>
-
-  <!-- SECTION 4: AER -->
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">04 &mdash; AER — ALTITUDE ELEVATION RADAR</div>
-    <p style="margin-bottom:8px;">The AER displays a vertical cross-section of the airspace. It shows where contacts are by altitude. You must align the AER beam to the same altitude as the contact you want to lock.</p>
-    <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-      <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:8px;">ELEVATION KEYS</div>
-      <div style="display:flex;gap:12px;">
-        <div style="background:#1a1a1a;border:1px solid #444;padding:8px 14px;border-radius:3px;color:#0f0;text-align:center;"><span style="font-size:16px;">8</span><br><span style="font-size:10px;color:#666;">RAISE</span></div>
-        <div style="background:#1a1a1a;border:1px solid #444;padding:8px 14px;border-radius:3px;color:#0f0;text-align:center;"><span style="font-size:16px;">2</span><br><span style="font-size:10px;color:#666;">LOWER</span></div>
-      </div>
-    </div>
-    <p style="margin-top:10px;font-size:12px;color:#777;">The mini graph below the AER screen shows beam angle as a rotating arm. Flat = low elevation, near-vertical = maximum elevation.</p>
-  </div>
-
-  <!-- SECTION 5: LOCKING -->
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">05 &mdash; ACQUIRING A LOCK</div>
-    <p style="margin-bottom:10px;">A lock is required before firing. To achieve one:</p>
-    <ol style="padding-left:20px;color:#aaa;font-size:13px;">
-      <li style="margin-bottom:8px;">Power on <span style="color:#0f0;">EWR</span> and <span style="color:#0f0;">TAR</span> and <span style="color:#0f0;">AER</span>.</li>
-      <li style="margin-bottom:8px;">Steer the TAR beam (WASD) until it overlaps a contact on the EWR.</li>
-      <li style="margin-bottom:8px;">Adjust AER elevation (<span style="color:#0f0;">8 / 2</span>) until the horizontal marker aligns with the contact's altitude band.</li>
-      <li style="margin-bottom:8px;">The status bar at the bottom will flash <span style="color:#ff0;">TAR+ALT ALIGNED</span> with the target ID. Press <span style="color:#0f0;">X</span> to lock.</li>
-      <li style="margin-bottom:8px;">Once locked, the TAR crosshair turns <span style="color:#ff0;">yellow</span> and follows the target as it moves. A pulsing ring confirms active tracking.</li>
-    </ol>
-    <p style="font-size:12px;color:#666;">Press <span style="color:#ccc;">X</span> again at any time to release the lock.</p>
-  </div>
-
-  <!-- SECTION 6: FIRING -->
-  <div style="margin-bottom:30px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">06 &mdash; AGNIBAAN FIRE CONTROL</div>
-    <p style="margin-bottom:10px;">The AGNIBAAN carries an 8-round loadout. Each cell on the grid represents one missile. Green = ready, dark = expended.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-        <div style="color:#0f0;font-size:11px;letter-spacing:2px;margin-bottom:6px;">FIRE — KEY N</div>
-        <p style="font-size:12px;color:#999;">With a target locked, press <span style="color:#0f0;">N</span> or click the red FIRE button to launch a missile. One round is consumed per shot.</p>
-      </div>
-      <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
-        <div style="color:#f90;font-size:11px;letter-spacing:2px;margin-bottom:6px;">REARM</div>
-        <p style="font-size:12px;color:#999;">Click the REARM button to reload all 8 missiles instantly. Individual cells can also be clicked to toggle manually.</p>
-      </div>
-    </div>
-    <p style="margin-top:10px;font-size:12px;color:#777;">A successful hit removes the contact from all displays immediately and releases the lock.</p>
-  </div>
-
-  <!-- SECTION 7: HEADER -->
-  <div style="margin-bottom:10px;">
-    <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">07 &mdash; HEADER DISPLAY</div>
-    <p style="margin-bottom:8px;">The <span style="color:#f90;">VAJRAPRAHAAR VAJRAPRATIJANA</span> phrase in the top-right cycles through all operational mottos on every page load. Click it at any time to step through them manually.</p>
-    <p style="font-size:12px;color:#666;">These are display-only ceremonial phrases and have no effect on system function.</p>
-  </div>
-
-  <div style="border-top:1px solid #222;padding-top:16px;margin-top:10px;font-size:11px;color:#444;letter-spacing:1px;text-align:center;">
-    SKYSTRIKER-BRAVO S/N:322A1 &nbsp;|&nbsp; OPERATOR GUIDE &nbsp;|&nbsp; FOR AUTHORISED USE ONLY
-  </div>
-
-</section>
-
 </body>
 </html>
