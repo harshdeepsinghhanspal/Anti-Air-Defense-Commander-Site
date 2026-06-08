@@ -95,7 +95,10 @@ html,body{
 <!-- HEADER BAR -->
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding:4px 6px;background:#111;border:2px solid #444;border-radius:3px;">
   <div style="font-size:30px;color:#0f0;font-weight:bold;letter-spacing:4px;font-family:'Courier New',monospace;line-height:1;">SKYSTRIKER-BRAVO</div>
-  <div id="vp-display" onclick="cycleVajra()" style="font-size:16px;color:#f90;letter-spacing:2px;font-family:'Courier New',monospace;cursor:pointer;text-align:right;user-select:none;" title="Click to cycle">VAJRAPRAHAAR VAJRAPRATIJANA</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="vp-display" onclick="cycleVajra()" style="font-size:16px;color:#f90;letter-spacing:2px;font-family:'Courier New',monospace;cursor:pointer;text-align:right;user-select:none;" title="Click to cycle">VAJRAPRAHAAR VAJRAPRATIJANA</div>
+    <button id="fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen" style="background:#111;border:2px solid #0a4;color:#0f0;font-family:'Courier New',monospace;font-size:11px;letter-spacing:1px;padding:4px 8px;cursor:pointer;border-radius:3px;white-space:nowrap;flex-shrink:0;">⛶ FULL</button>
+  </div>
 </div>
 
 <!-- TOP ROW: TAR | EWR | AER -->
@@ -363,6 +366,29 @@ html,body{
 /* ══════════════════════════════════════════════════════════
    MOBILE SCALING + ORIENTATION
 ══════════════════════════════════════════════════════════ */
+function toggleFullscreen(){
+  let el=document.documentElement;
+  let btn=document.getElementById('fs-btn');
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement&&!document.mozFullScreenElement){
+    let req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+    if(req) req.call(el).catch(()=>{});
+  } else {
+    let ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+    if(ex) ex.call(document).catch(()=>{});
+  }
+}
+function updateFsBtn(){
+  let btn=document.getElementById('fs-btn');
+  let inFs=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement);
+  btn.textContent=inFs?'⛶ EXIT':'⛶ FULL';
+  btn.style.borderColor=inFs?'#f90':'#0a4';
+  btn.style.color=inFs?'#f90':'#0f0';
+  setTimeout(applyScale,100);
+}
+document.addEventListener('fullscreenchange',updateFsBtn);
+document.addEventListener('webkitfullscreenchange',updateFsBtn);
+document.addEventListener('mozfullscreenchange',updateFsBtn);
+
 function applyScale(){
   let vw=window.innerWidth, vh=window.innerHeight;
   // In landscape the relevant constraint is the viewport width vs 980
