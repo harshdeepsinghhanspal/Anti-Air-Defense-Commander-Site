@@ -46,11 +46,11 @@ html,body{
 .knob.on{top:2px;background:#0c0;}
 .knob.off{top:16px;}
 .rdout{background:#111;border:2px solid #555;padding:3px 5px;flex:1;}
-.rdlbl{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;}
+.rdlbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;}
 .rdval{background:#000;border:1px solid #333;color:#f00;font-size:13px;font-family:'Courier New',monospace;
   font-weight:bold;padding:2px 4px;text-align:center;letter-spacing:2px;}
 .rdval.cyan{color:#0ff;}
-.batt-btn{background:#1a1a1a;border:2px solid #555;color:#0f0;font-size:9px;padding:3px 0;
+.batt-btn{background:#1a1a1a;border:2px solid #555;color:#0f0;font-size:10px;padding:3px 0;
   cursor:pointer;text-align:center;letter-spacing:1px;width:100%;}
 .batt-btn:hover{background:#333;}
 .mc{width:18px;height:18px;background:#0a0;border:1px solid #0f0;border-radius:2px;cursor:pointer;}
@@ -65,9 +65,9 @@ html,body{
 .fire-guard{width:44px;height:54px;background:#8B0000;border:3px solid #f00;border-radius:4px;
   display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .fire-inner{width:34px;height:42px;background:#cc0000;border:2px solid #f00;border-radius:3px;}
-.lock-body{background:#8B6914;border:2px solid #a88020;padding:4px 10px;font-size:10px;
+.lock-body{background:#8B6914;border:2px solid #a88020;padding:4px 10px;font-size:11px;
   color:#ffe;font-weight:bold;text-align:center;}
-.sub-bar{background:#111;border:2px solid #333;padding:2px 5px;font-size:8px;color:#0f0;
+.sub-bar{background:#111;border:2px solid #333;padding:2px 5px;font-size:10px;color:#0f0;
   display:flex;justify-content:space-between;}
 </style>
 </head>
@@ -129,8 +129,8 @@ html,body{
       <div style="width:5px;height:5px;border-radius:50%;background:#0a0;flex-shrink:0;"></div>
     </div>
 
-    <!-- Three readouts below TAR screen -->
-    <div style="display:flex;gap:3px;">
+    <!-- Three readouts below TAR screen - stacked vertically -->
+    <div style="display:flex;flex-direction:column;gap:3px;">
       <div class="rdout">
         <div class="rdlbl">TAR HDG</div>
         <div class="rdval" id="hdg-d">000.00</div>
@@ -158,7 +158,7 @@ html,body{
 
     <!-- IFF legend -->
     <div style="background:#111;border:2px solid #333;padding:2px 6px;display:flex;
-      gap:10px;font-size:8px;align-items:center;">
+      gap:10px;font-size:10px;align-items:center;">
       <span style="color:#888;">IFF:</span>
       <span style="color:#f55;">▲ HOSTILE</span>
       <span style="color:#5af;">● FRIENDLY</span>
@@ -167,29 +167,29 @@ html,body{
 
     <!-- City mode toggle -->
     <button id="mode-btn" onclick="toggleCityMode()"
-      style="background:#111;border:2px solid #0a4;color:#0f0;font-size:8px;
+      style="background:#111;border:2px solid #0a4;color:#0f0;font-size:10px;
       font-family:'Courier New',monospace;padding:3px 0;letter-spacing:2px;
       cursor:pointer;text-transform:uppercase;width:100%;">MODE: CITIES ON</button>
 
-    <!-- Three power switches below the mode button -->
+    <!-- Three power switches below the mode button (TAR first, then EWR, then AER) -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
-      <div class="sw-group" id="ewr-sw" onclick="toggleSw('ewr')">
-        <div id="ewr-off" style="color:#888;font-size:8px;">OFF</div>
-        <div class="tog"><div class="knob off" id="ewr-knob"></div></div>
-        <div id="ewr-on" style="color:#0a0;font-size:8px;visibility:hidden;">ON</div>
-        <div style="font-size:7px;color:#aaa;">EARLY<br>WARN<br>RADAR</div>
-      </div>
       <div class="sw-group" id="tar-sw" onclick="toggleSw('tar')">
-        <div id="tar-off" style="color:#888;font-size:8px;">OFF</div>
+        <div id="tar-off" style="color:#888;font-size:9px;">OFF</div>
         <div class="tog"><div class="knob off" id="tar-knob"></div></div>
-        <div id="tar-on" style="color:#0a0;font-size:8px;visibility:hidden;">ON</div>
-        <div style="font-size:7px;color:#aaa;">TARGET<br>ACQ<br>RADAR</div>
+        <div id="tar-on" style="color:#0a0;font-size:9px;visibility:hidden;">ON</div>
+        <div style="font-size:8px;color:#aaa;">TARGET<br>ACQ<br>RADAR</div>
+      </div>
+      <div class="sw-group" id="ewr-sw" onclick="toggleSw('ewr')">
+        <div id="ewr-off" style="color:#888;font-size:9px;">OFF</div>
+        <div class="tog"><div class="knob off" id="ewr-knob"></div></div>
+        <div id="ewr-on" style="color:#0a0;font-size:9px;visibility:hidden;">ON</div>
+        <div style="font-size:8px;color:#aaa;">EARLY<br>WARN<br>RADAR</div>
       </div>
       <div class="sw-group" id="aer-sw" onclick="toggleSw('aer')">
-        <div id="aer-off" style="color:#888;font-size:8px;">OFF</div>
+        <div id="aer-off" style="color:#888;font-size:9px;">OFF</div>
         <div class="tog"><div class="knob off" id="aer-knob"></div></div>
-        <div id="aer-on" style="color:#0a0;font-size:8px;visibility:hidden;">ON</div>
-        <div style="font-size:7px;color:#aaa;">ALT<br>ELEV<br>RADAR</div>
+        <div id="aer-on" style="color:#0a0;font-size:9px;visibility:hidden;">ON</div>
+        <div style="font-size:8px;color:#aaa;">ALT<br>ELEV<br>RADAR</div>
       </div>
     </div>
 
@@ -204,26 +204,34 @@ html,body{
       <div class="slblr" id="aer-slbl" style="color:#f00;">OFF</div>
     </div>
 
-    <!-- Mini angle graph -->
-    <div class="screen-box" style="height:52px;background:#000;border:2px solid #0a4;" id="aer-mini-wrap">
-      <canvas id="miniGraphCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+    <!-- Mini angle graph + TAR target display -->
+    <div style="display:flex;gap:4px;align-items:stretch;">
+      <div class="screen-box" style="height:52px;background:#000;border:2px solid #0a4;width:70px;flex-shrink:0;" id="aer-mini-wrap">
+        <canvas id="miniGraphCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+      </div>
+      <div style="background:#111;border:2px solid #0a4;padding:4px 8px;display:flex;flex-direction:column;
+        justify-content:center;gap:2px;flex:1;">
+        <div style="font-size:8px;color:#555;letter-spacing:1px;text-transform:uppercase;">TARGET</div>
+        <div id="tar-target-display" style="font-size:13px;color:#0ff;font-family:'Courier New',monospace;
+          font-weight:bold;letter-spacing:1px;">TAR: -- --</div>
+      </div>
     </div>
 
     <!-- Beam + Lock (moved below mini graph) -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
       <div style="background:#111;border:2px solid #444;padding:4px 5px;display:flex;
-        flex-direction:column;gap:3px;font-size:8px;color:#aaa;text-transform:uppercase;">
+        flex-direction:column;gap:3px;font-size:10px;color:#aaa;text-transform:uppercase;">
         <div class="beam-opt" onclick="setBeam('narrow')">
-          <div class="bdot" id="bn"></div><span style="font-size:8px;">NARROW</span>
+          <div class="bdot" id="bn"></div><span style="font-size:10px;">NARROW</span>
         </div>
         <div class="beam-opt" onclick="setBeam('standard')">
-          <div class="bdot sel" id="bs"></div><span style="font-size:8px;">STANDARD</span>
+          <div class="bdot sel" id="bs"></div><span style="font-size:10px;">STANDARD</span>
         </div>
       </div>
       <div style="background:#222;border:2px solid #666;padding:4px 6px;display:flex;
         flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:3px;"
         id="lock-sw" onclick="toggleLock()">
-        <div style="font-size:8px;color:#888;letter-spacing:2px;text-transform:uppercase;">LOCK</div>
+        <div style="font-size:10px;color:#888;letter-spacing:2px;text-transform:uppercase;">LOCK</div>
         <div class="lock-body" id="lock-body">LOCK</div>
       </div>
     </div>
@@ -233,8 +241,8 @@ html,body{
       align-items:center;gap:6px;">
       <div style="display:flex;flex-direction:column;gap:3px;flex:1;">
         <div style="display:flex;align-items:center;gap:6px;">
-          <div style="font-size:9px;color:#0f0;letter-spacing:2px;">AGNIBAAN</div>
-          <div style="font-size:9px;color:#0a0;" id="mc-count">8</div>
+          <div style="font-size:11px;color:#0f0;letter-spacing:2px;">AGNIBAAN</div>
+          <div style="font-size:11px;color:#0a0;" id="mc-count">8</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px;" id="mg">
           <div class="mc" onclick="useMissile(0)"></div>
@@ -249,11 +257,11 @@ html,body{
         <div class="batt-btn" onclick="rearm()">REARM</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-        <div style="font-size:8px;color:#f44;font-weight:bold;letter-spacing:1px;">FIRE</div>
+        <div style="font-size:10px;color:#f44;font-weight:bold;letter-spacing:1px;">FIRE</div>
         <div class="fire-guard" id="fg" onclick="fireMissile()">
           <div class="fire-inner" id="fi"></div>
         </div>
-        <div style="font-size:8px;color:#f44;font-weight:bold;letter-spacing:1px;">FIRE</div>
+        <div style="font-size:10px;color:#f44;font-weight:bold;letter-spacing:1px;">FIRE</div>
       </div>
     </div>
 
@@ -426,10 +434,10 @@ const CITIES=[
   {name:'Oxareth',ax:0.60,ay:-0.08},{name:'Bryndok',ax:-0.45,ay:-0.50},
   {name:'Vaelstrom',ax:0.15,ay:0.60},{name:'Horreth',ax:-0.62,ay:0.30}
 ];
-const MIL_LABELS=['GORTHEX','VALDRIS','MORTHEX','HELIX-9','STRIKER','WRAITH-2','TALON'];
-const CIV_LABELS=['ARELION AIR','CRESTAVIA 4','VELSTRAAT 7','NORDEX 51','ALTA WINGS','ORBIS 88'];
+const MIL_LABELS=['GORTHEX','VALDRIS','MORTHEX','HELIX-9','STRIKER','WRAITH-2','TALON','VIPER-1','GHOST-7','RAPTOR','BANSHEE','FALCON-3','COBRA-5','SHADOW-4','REAPER','SPECTRE'];
+const CIV_LABELS=['ARELION AIR','CRESTAVIA 4','VELSTRAAT 7','NORDEX 51','ALTA WINGS','ORBIS 88','SUNJET 12','HORIZON 7','AIROVA 3','SKYLINK 9'];
 
-function randSpeed(t){return t==='mil'?0.00010+Math.random()*0.00006:0.00005+Math.random()*0.00004;}
+function randSpeed(t){return t==='mil'?0.00013+Math.random()*0.00008:0.00005+Math.random()*0.00004;}
 function spawnAircraft(){
   let type=Math.random()<0.45?'mil':'civ';
   let ea=Math.random()*Math.PI*2;
@@ -445,11 +453,11 @@ function spawnAircraft(){
     hdgWander:(Math.random()-0.5)*0.00015,born:Date.now()};
 }
 let TARGETS=[];
-for(let i=0;i<4;i++){
-  let t=spawnAircraft(),r=0.2+Math.random()*0.7,a=Math.random()*Math.PI*2;
+for(let i=0;i<11;i++){
+  let t=spawnAircraft(),r=0.15+Math.random()*0.75,a=Math.random()*Math.PI*2;
   t.x=Math.cos(a)*r;t.y=Math.sin(a)*r;TARGETS.push(t);
 }
-let lastSpawn=Date.now(),spawnInterval=18000+Math.random()*12000;
+let lastSpawn=Date.now(),spawnInterval=5000+Math.random()*4000;
 function liveTargets(){return TARGETS.filter(t=>!S.destroyedIds.has(t.id));}
 
 /* ── CONTROLS ── */
@@ -658,28 +666,44 @@ function drawTAR(){
   for(let g=-fovV;g<=fovV;g+=Math.round(fovV/4)){
     let y=cy+(g/fovV)*(H/2-10);
     ctx.beginPath();ctx.moveTo(8,y);ctx.lineTo(W-8,y);ctx.stroke();
-    ctx.fillStyle='#0a4';ctx.font='7px Courier New';ctx.textAlign='left';ctx.fillText((-g).toFixed(0)+'°',2,y+3);
+    ctx.fillStyle='#0a4';ctx.font='13px Courier New';ctx.textAlign='left';ctx.fillText((-g).toFixed(0)+'°',2,y+4);
   }
   for(let g=-fovH;g<=fovH;g+=Math.round(fovH/4)){
     let x=cx+(g/fovH)*(W/2-10);
     ctx.beginPath();ctx.moveTo(x,8);ctx.lineTo(x,H-8);ctx.stroke();
-    ctx.fillStyle='#0a4';ctx.font='7px Courier New';ctx.textAlign='center';ctx.fillText(g.toFixed(0)+'°',x,H-2);
+    ctx.fillStyle='#0a4';ctx.font='13px Courier New';ctx.textAlign='center';ctx.fillText(g.toFixed(0)+'°',x,H-2);
   }
   ctx.strokeStyle='rgba(0,255,60,0.4)';ctx.lineWidth=1.2;ctx.setLineDash([4,3]);
   ctx.beginPath();ctx.moveTo(cx,8);ctx.lineTo(cx,H-8);ctx.stroke();
   ctx.beginPath();ctx.moveTo(8,cy);ctx.lineTo(W-8,cy);ctx.stroke();
   ctx.setLineDash([]);
   S.activemissiles.forEach(m=>{
-    if(!S.lockTarget||m.targetId!==S.lockTarget.id)return;
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
     let taz=targetAz(tgt),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
     let relEl=tgt.alt-S.tarEl;
-    if(Math.abs(relAz)<fovH&&Math.abs(relEl)<fovV){
-      let tx=cx+(relAz/fovH)*(W/2-10),ty=cy-(relEl/fovV)*(H/2-10);
-      let mg2=ctx.createRadialGradient(tx,ty,0,tx,ty,12*m.progress+2);
-      mg2.addColorStop(0,'rgba(255,200,0,0.9)');mg2.addColorStop(1,'rgba(255,100,0,0)');
-      ctx.fillStyle=mg2;ctx.beginPath();ctx.arc(tx,ty,12*m.progress+2,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(tx,ty,3,0,Math.PI*2);ctx.fill();
+    // Target pixel position (where missile is heading)
+    let destX=cx+(relAz/fovH)*(W/2-10);
+    let destY=cy-(relEl/fovV)*(H/2-10);
+    // Launch from bottom-center (0° az, ground level = below screen)
+    let startX=cx;
+    let startY=H-4;
+    // Current missile pixel position interpolated by progress
+    let mx=startX+(destX-startX)*m.progress;
+    let my=startY+(destY-startY)*m.progress;
+    // Draw trail
+    ctx.strokeStyle='rgba(255,160,0,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.moveTo(startX,startY);ctx.lineTo(mx,my);ctx.stroke();ctx.setLineDash([]);
+    // Draw missile dot with glow
+    let grd=ctx.createRadialGradient(mx,my,0,mx,my,8);
+    grd.addColorStop(0,'rgba(255,220,50,1)');grd.addColorStop(1,'rgba(255,80,0,0)');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.arc(mx,my,8,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mx,my,2.5,0,Math.PI*2);ctx.fill();
+    // Impact flash when near target
+    if(m.progress>0.92){
+      let alpha=(m.progress-0.92)/0.08;
+      let flash=ctx.createRadialGradient(destX,destY,0,destX,destY,18*alpha+4);
+      flash.addColorStop(0,'rgba(255,255,100,'+alpha+')');flash.addColorStop(1,'rgba(255,60,0,0)');
+      ctx.fillStyle=flash;ctx.beginPath();ctx.arc(destX,destY,18*alpha+4,0,Math.PI*2);ctx.fill();
     }
   });
   liveTargets().forEach(t=>{
@@ -689,7 +713,7 @@ function drawTAR(){
       let tx=cx+(relAz/fovH)*(W/2-10),ty=cy-(relEl/fovV)*(H/2-10);
       if(t.type==='mil'){let sz=7;ctx.strokeStyle='#f55';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(tx,ty-sz);ctx.lineTo(tx+sz,ty+sz*0.8);ctx.lineTo(tx-sz,ty+sz*0.8);ctx.closePath();ctx.stroke();}
       else{ctx.strokeStyle='#5af';ctx.lineWidth=1.5;ctx.strokeRect(tx-7,ty-7,14,14);}
-      ctx.fillStyle=t.type==='mil'?'#f55':'#5af';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(t.id,tx+9,ty-1);
+      ctx.fillStyle=t.type==='mil'?'#f55':'#5af';ctx.font='14px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(t.id,tx+9,ty-1);
       if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){
         ctx.strokeStyle='#ff0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(tx,ty,13,0,Math.PI*2);ctx.stroke();
         let p=0.5+0.5*Math.sin(Date.now()*0.01);
@@ -713,9 +737,9 @@ function drawTAR(){
   ctx.beginPath();ctx.moveTo(chx-7,chy);ctx.lineTo(chx+7,chy);ctx.stroke();
   ctx.beginPath();ctx.moveTo(chx,chy-7);ctx.lineTo(chx,chy+7);ctx.stroke();
   if(S.locked){let p=0.5+0.5*Math.sin(Date.now()*0.008);ctx.strokeStyle='rgba(255,220,0,'+p+')';ctx.lineWidth=1;ctx.beginPath();ctx.arc(chx,chy,10,0,Math.PI*2);ctx.stroke();}
-  ctx.fillStyle='#0a0';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
-  ctx.fillText('AZ:'+S.tarAz.toFixed(1)+'°',4,12);ctx.fillText('EL:'+S.tarEl.toFixed(1)+'°',4,22);
-  ctx.fillStyle='rgba(0,80,0,0.35)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('◀ DRAG ▶',cx,H-4);
+  ctx.fillStyle='#0a0';ctx.font='14px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.fillText('AZ:'+S.tarAz.toFixed(1)+'°',4,16);ctx.fillText('EL:'+S.tarEl.toFixed(1)+'°',4,32);
+  ctx.fillStyle='rgba(0,80,0,0.35)';ctx.font='14px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('◀ DRAG ▶',cx,H-4);
   document.getElementById('hdg-d').textContent=S.tarAz.toFixed(2).padStart(6,'0');
   document.getElementById('elev-d').textContent=S.tarEl.toFixed(2).padStart(5,'0');
 }
@@ -728,10 +752,10 @@ function drawAER(){
   let ctx=c.getContext('2d'),W=c.width,H=c.height;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
   if(!S.aerOn){
-    ctx.fillStyle='#0a0';ctx.font='10px Courier New';ctx.textAlign='center';
+    ctx.fillStyle='#0a0';ctx.font='16px Courier New';ctx.textAlign='center';
     ctx.fillText('ALT ELEV RADAR',W/2,H/2-10);
-    ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+8);
-    ctx.fillStyle='#333';ctx.font='9px Courier New';ctx.fillText('DRAG TO ADJUST',W/2,H/2+26);
+    ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+10);
+    ctx.fillStyle='#333';ctx.font='13px Courier New';ctx.fillText('DRAG TO ADJUST',W/2,H/2+30);
     document.getElementById('aer-slbl').style.color='#f00';document.getElementById('aer-slbl').textContent='OFF';return;
   }
   document.getElementById('aer-slbl').style.color='#0f0';document.getElementById('aer-slbl').textContent='EL:'+S.altEl.toFixed(0)+'k';
@@ -739,7 +763,7 @@ function drawAER(){
   for(let g=0;g<=altMax;g+=5){
     let y=H-10-(g/altMax)*(H-20);
     ctx.strokeStyle='#046';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(24,y);ctx.lineTo(W-4,y);ctx.stroke();
-    ctx.fillStyle='#046';ctx.font='8px Courier New';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(g+'k',22,y);
+    ctx.fillStyle='#046';ctx.font='12px Courier New';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(g+'k',22,y);
   }
   let beamCY=H-10-(S.altEl/altMax)*(H-20);
   let beamY1=Math.max(4,Math.min(H-4,H-10-((S.altEl-fovAlt)/altMax)*(H-20)));
@@ -759,34 +783,50 @@ function drawAER(){
     let col=t.type==='mil'?'#f55':'#5af',dim=t.type==='mil'?'#522':'#024';
     ctx.strokeStyle=inBeam?col:dim;ctx.lineWidth=inBeam?2:1;
     ctx.beginPath();ctx.moveTo(26,ty);ctx.lineTo(W-4,ty);ctx.stroke();
-    ctx.fillStyle=inBeam?col:dim;ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(t.id+' '+t.alt.toFixed(0)+'k',28,ty-2);
+    ctx.fillStyle=inBeam?col:dim;ctx.font='13px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(t.id+' '+t.alt.toFixed(0)+'k',28,ty-2);
     if(inBeam){ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.strokeRect(W-17,ty-4,13,9);}
     if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){ctx.strokeStyle='#ff0';ctx.lineWidth=2;ctx.strokeRect(W-19,ty-6,17,13);}
   });
   ctx.strokeStyle='#0ff';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(20,beamCY-5);ctx.lineTo(20,beamCY+5);ctx.stroke();
   ctx.beginPath();ctx.moveTo(14,beamCY);ctx.lineTo(28,beamCY);ctx.stroke();
-  ctx.fillStyle='#0aa';ctx.font='8px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('EL:'+S.altEl.toFixed(1)+'k',28,13);
-  ctx.fillStyle='rgba(0,60,60,0.4)';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('▲ DRAG ▼',W/2,H-4);
+  ctx.fillStyle='#0aa';ctx.font='14px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText('EL:'+S.altEl.toFixed(1)+'k',28,17);
+  ctx.fillStyle='rgba(0,60,60,0.4)';ctx.font='14px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('▲ DRAG ▼',W/2,H-4);
   document.getElementById('alt-d').textContent=S.altEl.toFixed(2).padStart(5,'0');
+  // Update TAR target display: show locked target or closest in-beam target
+  let tarDisp=document.getElementById('tar-target-display');
+  let beamTargets=liveTargets().filter(t=>Math.abs(t.alt-S.altEl)<fovAlt);
+  function kts(t){return Math.round(Math.sqrt(t.vx*t.vx+t.vy*t.vy)*6000000);}
+  if(S.locked&&S.lockTarget){
+    let t=S.lockTarget;
+    tarDisp.textContent='TAR: '+t.id+' '+t.alt.toFixed(0)+'k '+kts(t)+' kts';
+    tarDisp.style.color='#ff0';
+  }else if(beamTargets.length>0){
+    let closest=beamTargets.reduce((a,b)=>Math.abs(a.alt-S.altEl)<Math.abs(b.alt-S.altEl)?a:b);
+    tarDisp.textContent='TAR: '+closest.id+' '+closest.alt.toFixed(0)+'k '+kts(closest)+' kts';
+    tarDisp.style.color=closest.type==='mil'?'#f55':'#5af';
+  }else{
+    tarDisp.textContent='TAR: -- --';
+    tarDisp.style.color='#0ff';
+  }
 }
 
 /* ── DRAW: MINI GRAPH ── */
 function drawMiniGraph(){
   let c=document.getElementById('miniGraphCanvas');
   let wrap=document.getElementById('aer-mini-wrap');
-  c.width=wrap.offsetWidth||330;c.height=wrap.offsetHeight||52;
+  c.width=wrap.offsetWidth||70;c.height=wrap.offsetHeight||52;
   let ctx=c.getContext('2d'),W=c.width,H=c.height;
   ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
-  let pad={l:22,r:8,t:5,b:14},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b,altMax=50;
+  let pad={l:6,r:6,t:5,b:8},gW=W-pad.l-pad.r,gH=H-pad.t-pad.b,altMax=50;
+  // Subtle grid lines only
   ctx.strokeStyle='rgba(0,255,136,0.12)';ctx.lineWidth=0.5;
   for(let v=0;v<=altMax;v+=25){let gy=pad.t+gH-(v/altMax)*gH;ctx.beginPath();ctx.moveTo(pad.l,gy);ctx.lineTo(pad.l+gW,gy);ctx.stroke();}
+  // Axes
   ctx.strokeStyle='#00ff88';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+gH);ctx.stroke();
   ctx.beginPath();ctx.moveTo(pad.l,pad.t+gH);ctx.lineTo(pad.l+gW,pad.t+gH);ctx.stroke();
-  ctx.fillStyle='#00ff88';ctx.font='6px Courier New';ctx.textAlign='right';ctx.textBaseline='middle';
-  for(let v=0;v<=altMax;v+=25){let gy=pad.t+gH-(v/altMax)*gH;ctx.fillText(v,pad.l-2,gy);}
-  ctx.fillStyle='#00ff88';ctx.textAlign='center';ctx.textBaseline='top';ctx.font='6px Courier New';ctx.fillText('EL°',pad.l+gW/2,H-9);
+  // Needle
   let ox=pad.l,oy=pad.t+gH,lineLen=Math.min(gW,gH)*0.92;
   let angleRad=(S.altEl/altMax)*85*(Math.PI/180);
   let tipX=ox+lineLen*Math.cos(angleRad),tipY=oy-lineLen*Math.sin(angleRad);
@@ -795,7 +835,6 @@ function drawMiniGraph(){
   ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tipX,tipY);ctx.stroke();ctx.shadowBlur=0;
   ctx.fillStyle='#ffee00';ctx.shadowColor='#ffee00';ctx.shadowBlur=6;ctx.beginPath();ctx.arc(tipX,tipY,2.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
   ctx.fillStyle='#00ff88';ctx.beginPath();ctx.arc(ox,oy,2,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#ffee00';ctx.font='6px Courier New';ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(S.altEl.toFixed(0)+'k',pad.l+2,pad.t);
 }
 
 /* ── ANIMATION LOOP ── */
@@ -809,22 +848,28 @@ function animate(){
   S.tarAz=((S.tarAz%360)+360)%360;
   liveTargets().forEach(t=>{
     let speed=Math.sqrt(t.vx*t.vx+t.vy*t.vy),ang=Math.atan2(t.vy,t.vx),dist=targetDist(t);
-    if(dist>0.82){
+    if(dist>0.9){
       let tc2=Math.atan2(-t.y,-t.x),diff=tc2-ang;
       while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
-      ang+=diff*((dist-0.82)/0.18)*0.012;
+      ang+=diff*((dist-0.9)/0.1)*0.004;
     }else{ang+=t.hdgWander;}
     t.vx=Math.cos(ang)*speed;t.vy=Math.sin(ang)*speed;t.x+=t.vx;t.y+=t.vy;
-    let d2=targetDist(t);if(d2>0.97){t.x*=0.97/d2;t.y*=0.97/d2;}
+    let d2=targetDist(t);if(d2>1.1){t.x*=1.1/d2;t.y*=1.1/d2;}
     t.alt+=t.altRate;if(t.alt>48||t.alt<8)t.altRate*=-1;
     t.hdg=((Math.atan2(t.vx,-t.vy)*180/Math.PI)+360)%360;
   });
   TARGETS=TARGETS.filter(t=>!S.destroyedIds.has(t.id));
+  // Remove aircraft that have drifted out of the radar boundary (natural exit)
+  TARGETS=TARGETS.filter(t=>{
+    let d=Math.sqrt(t.x*t.x+t.y*t.y);
+    if(d>1.15){if(S.locked&&S.lockTarget&&S.lockTarget.id===t.id){S.locked=false;S.lockTarget=null;applyLockUI();}return false;}
+    return true;
+  });
   let now=Date.now();
-  if(now-lastSpawn>spawnInterval&&liveTargets().length<6){
-    let nt=spawnAircraft(),ra=0.82+Math.random()*0.10,aa=Math.random()*Math.PI*2;
+  if(now-lastSpawn>spawnInterval&&liveTargets().length<11){
+    let nt=spawnAircraft(),ra=0.75+Math.random()*0.15,aa=Math.random()*Math.PI*2;
     nt.x=Math.cos(aa)*ra;nt.y=Math.sin(aa)*ra;TARGETS.push(nt);
-    lastSpawn=now;spawnInterval=18000+Math.random()*12000;
+    lastSpawn=now;spawnInterval=5000+Math.random()*4000;
   }
   if(S.locked&&S.lockTarget){let lt=TARGETS.find(t=>t.id===S.lockTarget.id&&!S.destroyedIds.has(t.id));if(lt)S.lockTarget=lt;}
   S.activemissiles=S.activemissiles.filter(m=>{
