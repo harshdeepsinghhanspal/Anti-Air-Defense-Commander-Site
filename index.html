@@ -307,7 +307,7 @@ html,body{
 
   <div style="margin-bottom:30px;">
     <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">02 — EWR — EARLY WARNING RADAR</div>
-    <p style="margin-bottom:8px;">360° sweep. Contacts appear as the arm paints them.</p>
+    <p style="margin-bottom:8px;">360° sweep. Contacts appear as the arm paints them. The <span style="color:#f90;">amber line</span> shows the current TAR beam direction.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
       <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
         <div style="color:#f55;font-size:11px;letter-spacing:2px;margin-bottom:6px;">▲ HOSTILE</div>
@@ -322,7 +322,7 @@ html,body{
 
   <div style="margin-bottom:30px;">
     <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">03 — TAR — TARGET ACQUISITION RADAR</div>
-    <p style="margin-bottom:10px;">Steer the crosshair by dragging on the TAR screen (touch) or WASD keys (keyboard).</p>
+    <p style="margin-bottom:10px;">Steer the crosshair by dragging on the TAR screen (touch) or WASD keys (keyboard). The amber line on EWR rotates in real-time to show TAR beam heading.</p>
     <div style="background:#0a0a0a;border:1px solid #222;padding:12px;border-radius:4px;">
       <div style="font-size:11px;color:#888;letter-spacing:2px;margin-bottom:8px;">KEYS: W=UP  S=DOWN  A=LEFT  D=RIGHT</div>
       <div style="font-size:11px;color:#0f0;">📱 MOBILE: Drag on TAR screen to steer beam.</div>
@@ -342,7 +342,7 @@ html,body{
     <div style="font-size:14px;color:#0f0;letter-spacing:3px;margin-bottom:10px;border-left:3px solid #0a4;padding-left:10px;">05 — ACQUIRING A LOCK</div>
     <ol style="padding-left:20px;color:#aaa;font-size:13px;">
       <li style="margin-bottom:8px;">Power on all three radars.</li>
-      <li style="margin-bottom:8px;">Steer TAR beam onto a contact visible on EWR.</li>
+      <li style="margin-bottom:8px;">Steer TAR beam onto a contact visible on EWR — the amber line shows where TAR is pointing.</li>
       <li style="margin-bottom:8px;">Adjust AER elevation until the marker aligns with the contact's altitude.</li>
       <li style="margin-bottom:8px;">Status bar flashes <span style="color:#ff0;">TAR+ALT ALIGNED</span>. Tap LOCK or press <span style="color:#0f0;">X</span>.</li>
       <li style="margin-bottom:8px;">Crosshair turns <span style="color:#ff0;">yellow</span> and tracks the target.</li>
@@ -412,16 +412,39 @@ applyScale();
 (function(){try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}})();
 
 /* ════════════════════════════════
-   GAME STATE
+   COORDINATE SYSTEM
+   ─────────────────────────────
+   All bearings use COMPASS convention:
+     0° = North = top of EWR screen
+     90° = East = right of EWR screen
+     180° = South = bottom of EWR screen
+     270° = West = left of EWR screen
+
+   Aircraft stored as (t.x, t.y) in canvas coords (x=right, y=down).
+   targetAz(t) converts to compass bearing: atan2(t.x, -t.y)
+   Canvas draw from compass bearing θ:  x = sin(θ_rad),  y = -cos(θ_rad)
 ════════════════════════════════ */
+
 const S={
   ewrOn:false,tarOn:false,aerOn:false,
   locked:false,beam:'standard',showCities:true,
-  tarAz:90,tarEl:0,altEl:0,
+  tarAz:0,       // compass bearing, 0=North
+  tarEl:0,altEl:0,
   missiles:[true,true,true,true,true,true,true,true],
   lockTarget:null,ewrSweep:0,keys:{},
   activemissiles:[],destroyedIds:new Set(),nextId:1
 };
+
+/* Convert compass bearing (degrees) to canvas unit vector */
+function compassToCanvas(deg){
+  let r=deg*Math.PI/180;
+  return{x:Math.sin(r),y:-Math.cos(r)};
+}
+
+/* Compass bearing from canvas coords: atan2(x, -y) */
+function targetAz(t){
+  return((Math.atan2(t.x,-t.y)*180/Math.PI)+360)%360;
+}
 
 const CITIES=[
   {name:'Valdris',ax:-0.28,ay:-0.22},{name:'Morthex',ax:0.10,ay:-0.06},
@@ -436,11 +459,6 @@ const CIV_LABELS=['ARELION AIR','CRESTAVIA 4','VELSTRAAT 7','NORDEX 51','ALTA WI
 
 function randSpeed(t){return t==='mil'?0.00013+Math.random()*0.00008:0.00005+Math.random()*0.00004;}
 
-/*
- * SPEED CALIBRATION — realistic knot ranges:
- *   Military: base speed 0.00013–0.00021 sim-units/frame → 533–861 kts (mul=4,100,000)
- *   Civilian: base speed 0.00005–0.00009 sim-units/frame → 320–576 kts (mul=6,400,000)
- */
 function kts(t){
   let rawSpd=Math.sqrt(t.vx*t.vx+t.vy*t.vy);
   let mult=t.type==='mil'?4100000:6400000;
@@ -453,6 +471,7 @@ function spawnAircraft(){
   let x=Math.cos(ea)*1.05,y=Math.sin(ea)*1.05;
   let tc=Math.atan2(-y,-x),hr=tc+(Math.random()-0.5)*1.2;
   let spd=randSpeed(type),vx=Math.cos(hr)*spd,vy=Math.sin(hr)*spd;
+  // compass heading from velocity: atan2(vx, -vy)
   let hdg=((Math.atan2(vx,-vy)*180/Math.PI)+360)%360;
   let id=(type==='mil'?'F':'C')+S.nextId++;
   return{id,type,x,y,vx,vy,
@@ -491,8 +510,8 @@ function updateGrid(){
   cells.forEach((c,i)=>{c.className='mc'+(S.missiles[i]?'':' used');if(S.missiles[i])n++;});
   document.getElementById('mc-count').textContent=n;
 }
-function targetAz(t){return((Math.atan2(t.y,t.x)*180/Math.PI)+360)%360;}
 function targetDist(t){return Math.sqrt(t.x*t.x+t.y*t.y);}
+
 function checkAlign(){
   let azN=((S.tarAz%360)+360)%360;
   for(let t of liveTargets()){
@@ -560,6 +579,7 @@ function updateStatus(){
     let p=pos(e),dx=p.x-lastX,dy=p.y-lastY;lastX=p.x;lastY=p.y;
     let W=screen.offsetWidth,H=screen.offsetHeight;
     let fovH=S.beam==='narrow'?20:60,fovV=S.beam==='narrow'?14:40;
+    // dx>0 = drag right = beam moves East = tarAz increases ✓ (compass convention)
     S.tarAz=((S.tarAz+(dx/(W/2))*fovH)%360+360)%360;
     S.tarEl=Math.max(0,Math.min(45,S.tarEl-(dy/(H/2))*fovV));
   },{passive:false});
@@ -595,22 +615,85 @@ function drawEWR(){
   document.getElementById('ewr-slbl').style.color='#0f0';
   document.getElementById('ewr-slbl').textContent='ON';
   let cx=W/2,cy=H/2,r=Math.min(cx,cy)-14;
+
+  // Grid rings
   ctx.strokeStyle='#0a4';ctx.lineWidth=0.5;
   for(let i=1;i<=4;i++){ctx.beginPath();ctx.arc(cx,cy,r*i/4,0,Math.PI*2);ctx.stroke();}
-  for(let a=0;a<360;a+=30){
-    let rad=a*Math.PI/180;
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(rad)*r,cy+Math.sin(rad)*r);ctx.stroke();
+
+  // Compass spoke labels: 0=N(top), 90=E(right), 180=S(bottom), 270=W(left)
+  for(let deg=0;deg<360;deg+=30){
+    let cv=compassToCanvas(deg);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+cv.x*r,cy+cv.y*r);ctx.stroke();
     ctx.fillStyle='#0a4';ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(a,cx+Math.cos(rad)*(r+10),cy+Math.sin(rad)*(r+10));
+    ctx.fillText(deg,cx+cv.x*(r+10),cy+cv.y*(r+10));
   }
+
+  // EWR sweep arm — stored in radians using canvas math convention (cos/sin), but we advance it
+  // clockwise visually = increasing angle in canvas = increasing ewrSweep
   S.ewrSweep+=0.007;if(S.ewrSweep>Math.PI*2)S.ewrSweep-=Math.PI*2;
+
+  // Sweep glow trails
   for(let i=0;i<12;i++){
     let ang=S.ewrSweep-i*0.035;
     ctx.strokeStyle='rgba(0,200,60,'+(0.04*(12-i))+')';ctx.lineWidth=r*0.28;
     ctx.beginPath();ctx.arc(cx,cy,r/2,ang-0.14,ang+0.14);ctx.stroke();
   }
+  // Sweep arm line
   ctx.strokeStyle='rgba(0,255,60,0.9)';ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(S.ewrSweep)*r,cy+Math.sin(S.ewrSweep)*r);ctx.stroke();
+
+  /* ── TAR BEAM AMBER LINE ──
+   * Uses compass bearing S.tarAz, converted to canvas direction via compassToCanvas.
+   * This matches exactly where targetAz() places aircraft on this screen.
+   */
+  if(S.tarOn){
+    let cv=compassToCanvas(S.tarAz);
+    let beamLen=r;
+    // Faint FOV wedge
+    let fovH=S.beam==='narrow'?20:60;
+    let fovRad=fovH*Math.PI/180;
+    let tarRad=S.tarAz*Math.PI/180;
+    // Convert tarAz compass to canvas angle: canvas_angle = PI/2 - tarAz_rad  ... wait
+    // compassToCanvas(θ) = {x:sin(θ), y:-cos(θ)}
+    // The canvas angle (for arc) from the canvas x-axis = atan2(-cos(θ), sin(θ)) = atan2(y,x) with {x:sinθ, y:-cosθ}
+    // = atan2(-cosθ, sinθ) = -(PI/2 - θ) = θ - PI/2
+    let canvasAngle=tarRad - Math.PI/2;
+    ctx.fillStyle='rgba(255,140,0,0.06)';
+    ctx.beginPath();ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,beamLen,canvasAngle-fovRad/2,canvasAngle+fovRad/2);
+    ctx.closePath();ctx.fill();
+
+    // Amber line
+    let locked=S.locked;
+    let lineAlpha=locked?0.55:0.85;
+    let glowColor=locked?'rgba(255,220,0,':'rgba(255,140,0,';
+    // Glow pass
+    ctx.shadowColor=locked?'#ffdd00':'#ff8800';
+    ctx.shadowBlur=locked?6:4;
+    ctx.strokeStyle=glowColor+lineAlpha+')';
+    ctx.lineWidth=locked?2.5:2;
+    ctx.setLineDash(locked?[]:[6,3]);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+cv.x*beamLen,cy+cv.y*beamLen);ctx.stroke();
+    ctx.setLineDash([]);ctx.shadowBlur=0;
+
+    // Arrowhead at tip
+    let tipX=cx+cv.x*beamLen,tipY=cy+cv.y*beamLen;
+    let perpX=-cv.y,perpY=cv.x; // perpendicular
+    let arrowSize=7;
+    ctx.fillStyle=locked?'rgba(255,220,0,0.9)':'rgba(255,140,0,0.9)';
+    ctx.beginPath();
+    ctx.moveTo(tipX,tipY);
+    ctx.lineTo(tipX-cv.x*arrowSize+perpX*arrowSize*0.4,tipY-cv.y*arrowSize+perpY*arrowSize*0.4);
+    ctx.lineTo(tipX-cv.x*arrowSize-perpX*arrowSize*0.4,tipY-cv.y*arrowSize-perpY*arrowSize*0.4);
+    ctx.closePath();ctx.fill();
+
+    // Small TAR label near tip
+    ctx.fillStyle=locked?'rgba(255,220,0,0.7)':'rgba(255,140,0,0.7)';
+    ctx.font='8px Courier New';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('TAR',tipX-cv.x*14,tipY-cv.y*14);
+  }
+
+  // Missile trails on EWR
   S.activemissiles.forEach(m=>{
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
     let tx=cx+tgt.x*r,ty=cy+tgt.y*r;
@@ -624,10 +707,14 @@ function drawEWR(){
     ctx.fillStyle='#ffcc00';ctx.beginPath();ctx.arc(mx,my,4,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle='#ff8800';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mx,my,7,0,Math.PI*2);ctx.stroke();
   });
+
+  // Aircraft contacts
   liveTargets().forEach(t=>{
     let tx=cx+t.x*r,ty=cy+t.y*r;
-    let trad=Math.atan2(t.y,t.x);
-    let diff=((S.ewrSweep-trad)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+    // Alpha based on EWR sweep proximity
+    // EWR sweep is in canvas math angle. Target canvas angle = atan2(t.y, t.x)
+    let tCanvasAngle=Math.atan2(t.y,t.x);
+    let diff=((S.ewrSweep-tCanvasAngle)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
     let alpha=diff<0.25?1:Math.max(0,1-diff/(Math.PI*1.4));
     let age=(Date.now()-t.born)/1000;alpha*=Math.min(1,age/2);
     if(alpha>0.04){
@@ -652,6 +739,7 @@ function drawEWR(){
       }
     }
   });
+
   if(S.showCities){CITIES.forEach(c2=>{let px=cx+c2.ax*r,py=cy+c2.ay*r;ctx.fillStyle='#bbb';ctx.font='9px Arial';ctx.fillText('•',px-3,py);ctx.fillText(c2.name,px+4,py);});}
 }
 
@@ -686,14 +774,16 @@ function drawTAR(){
   ctx.beginPath();ctx.moveTo(cx,8);ctx.lineTo(cx,H-8);ctx.stroke();
   ctx.beginPath();ctx.moveTo(8,cy);ctx.lineTo(W-8,cy);ctx.stroke();
   ctx.setLineDash([]);
+
+  // Missile trails on TAR
   S.activemissiles.forEach(m=>{
     let tgt=liveTargets().find(t=>t.id===m.targetId);if(!tgt)return;
-    let taz=targetAz(tgt),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
+    let taz=targetAz(tgt);
+    let relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
     let relEl=tgt.alt-S.tarEl;
     let destX=cx+(relAz/fovH)*(W/2-10);
     let destY=cy-(relEl/fovV)*(H/2-10);
-    let startX=cx;
-    let startY=H-4;
+    let startX=cx,startY=H-4;
     let mx=startX+(destX-startX)*m.progress;
     let my=startY+(destY-startY)*m.progress;
     ctx.strokeStyle='rgba(255,160,0,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
@@ -704,16 +794,22 @@ function drawTAR(){
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mx,my,2.5,0,Math.PI*2);ctx.fill();
     if(m.progress>0.92){
       let alpha=(m.progress-0.92)/0.08;
-      let flash=ctx.createRadialGradient(destX,destY,0,destX,destY,18*alpha+4);
-      flash.addColorStop(0,'rgba(255,255,100,'+alpha+')');flash.addColorStop(1,'rgba(255,60,0,0)');
-      ctx.fillStyle=flash;ctx.beginPath();ctx.arc(destX,destY,18*alpha+4,0,Math.PI*2);ctx.fill();
+      let flashG=ctx.createRadialGradient(destX,destY,0,destX,destY,18*alpha+4);
+      flashG.addColorStop(0,'rgba(255,255,100,'+alpha+')');flashG.addColorStop(1,'rgba(255,60,0,0)');
+      ctx.fillStyle=flashG;ctx.beginPath();ctx.arc(destX,destY,18*alpha+4,0,Math.PI*2);ctx.fill();
     }
   });
+
+  // Aircraft on TAR
   liveTargets().forEach(t=>{
-    let taz=targetAz(t),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
+    let taz=targetAz(t);
+    let relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
     let relEl=t.alt-S.tarEl;
     if(Math.abs(relAz)<fovH&&Math.abs(relEl)<fovV){
-      let tx=cx+(relAz/fovH)*(W/2-10),ty=cy-(relEl/fovV)*(H/2-10);
+      // relAz>0 means target is clockwise (East) of beam center → right of crosshair
+      let tx=cx+(relAz/fovH)*(W/2-10);
+      // relEl>0 means target is higher than beam → above crosshair
+      let ty=cy-(relEl/fovV)*(H/2-10);
       if(t.type==='mil'){let sz=7;ctx.strokeStyle='#f55';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(tx,ty-sz);ctx.lineTo(tx+sz,ty+sz*0.8);ctx.lineTo(tx-sz,ty+sz*0.8);ctx.closePath();ctx.stroke();}
       else{ctx.strokeStyle='#5af';ctx.lineWidth=1.5;ctx.strokeRect(tx-7,ty-7,14,14);}
       ctx.fillStyle=t.type==='mil'?'#f55':'#5af';ctx.font='14px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(t.id,tx+9,ty-1);
@@ -726,11 +822,14 @@ function drawTAR(){
       }
     }
   });
+
+  // Crosshair
   let chx=cx,chy=cy;
   if(S.locked&&S.lockTarget){
     let lt=liveTargets().find(t=>t.id===S.lockTarget.id);
     if(lt){
-      let taz=targetAz(lt),relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
+      let taz=targetAz(lt);
+      let relAz=taz-S.tarAz;while(relAz>180)relAz-=360;while(relAz<-180)relAz+=360;
       let relEl=lt.alt-S.tarEl;
       if(Math.abs(relAz)<fovH&&Math.abs(relEl)<fovV){chx=cx+(relAz/fovH)*(W/2-10);chy=cy-(relEl/fovV)*(H/2-10);}
     }
@@ -740,6 +839,7 @@ function drawTAR(){
   ctx.beginPath();ctx.moveTo(chx-7,chy);ctx.lineTo(chx+7,chy);ctx.stroke();
   ctx.beginPath();ctx.moveTo(chx,chy-7);ctx.lineTo(chx,chy+7);ctx.stroke();
   if(S.locked){let p=0.5+0.5*Math.sin(Date.now()*0.008);ctx.strokeStyle='rgba(255,220,0,'+p+')';ctx.lineWidth=1;ctx.beginPath();ctx.arc(chx,chy,10,0,Math.PI*2);ctx.stroke();}
+
   ctx.fillStyle='#0a0';ctx.font='14px Courier New';ctx.textAlign='left';ctx.textBaseline='alphabetic';
   ctx.fillText('AZ:'+S.tarAz.toFixed(1)+'°',4,16);ctx.fillText('EL:'+S.tarEl.toFixed(1)+'°',4,32);
   ctx.fillStyle='rgba(0,80,0,0.35)';ctx.font='14px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('◀ DRAG ▶',cx,H-4);
@@ -760,7 +860,6 @@ function drawAER(){
     ctx.fillStyle='#f00';ctx.fillText('OFFLINE',W/2,H/2+10);
     ctx.fillStyle='#333';ctx.font='13px Courier New';ctx.fillText('DRAG TO ADJUST',W/2,H/2+30);
     document.getElementById('aer-slbl').style.color='#f00';document.getElementById('aer-slbl').textContent='OFF';
-    // When AER is offline, show no-contact state
     let tarDisp=document.getElementById('tar-target-display');
     tarDisp.textContent='TAR: -- -- --';tarDisp.style.color='#0ff';
     return;
@@ -801,33 +900,22 @@ function drawAER(){
   ctx.fillStyle='rgba(0,60,60,0.4)';ctx.font='14px Courier New';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('▲ DRAG ▼',W/2,H-4);
   document.getElementById('alt-d').textContent=S.altEl.toFixed(2).padStart(5,'0');
 
-  /* ── TAR TARGET DISPLAY ──
-   * Rules:
-   *  1. If locked → show locked target (always, regardless of beam position)
-   *  2. Else if AER beam intersects ≥1 aircraft → show closest one in beam
-   *  3. Else → TAR: -- -- -- (beam not covering any aircraft)
-   */
   let tarDisp=document.getElementById('tar-target-display');
-  // Strictly beam-contact targets only
   let beamTargets=liveTargets().filter(t=>Math.abs(t.alt-S.altEl)<fovAlt);
-
   if(S.locked&&S.lockTarget){
     let t=liveTargets().find(tt=>tt.id===S.lockTarget.id);
     if(t){
       tarDisp.textContent='TAR: '+t.id+' '+t.alt.toFixed(0)+'k '+kts(t)+' kts';
       tarDisp.style.color='#ff0';
     }else{
-      // Locked target destroyed
       tarDisp.textContent='TAR: -- -- --';
       tarDisp.style.color='#0ff';
     }
   }else if(beamTargets.length>0){
-    // Pick the aircraft whose altitude is closest to the beam centre
     let closest=beamTargets.reduce((a,b)=>Math.abs(a.alt-S.altEl)<Math.abs(b.alt-S.altEl)?a:b);
     tarDisp.textContent='TAR: '+closest.id+' '+closest.alt.toFixed(0)+'k '+kts(closest)+' kts';
     tarDisp.style.color=closest.type==='mil'?'#f55':'#5af';
   }else{
-    // Beam not intersecting any aircraft
     tarDisp.textContent='TAR: -- -- --';
     tarDisp.style.color='#0ff';
   }
@@ -858,6 +946,7 @@ function drawMiniGraph(){
 
 /* ── ANIMATION LOOP ── */
 function animate(){
+  // WASD: compass convention — A=turn left (West, decrease Az), D=turn right (East, increase Az)
   if(S.keys['a']||S.keys['A'])S.tarAz-=0.2;
   if(S.keys['d']||S.keys['D'])S.tarAz+=0.2;
   if(S.keys['w']||S.keys['W'])S.tarEl=Math.min(45,S.tarEl+0.15);
@@ -865,6 +954,7 @@ function animate(){
   if(S.keys['8'])S.altEl=Math.min(50,S.altEl+0.08);
   if(S.keys['2'])S.altEl=Math.max(0,S.altEl-0.08);
   S.tarAz=((S.tarAz%360)+360)%360;
+
   liveTargets().forEach(t=>{
     let speed=Math.sqrt(t.vx*t.vx+t.vy*t.vy),ang=Math.atan2(t.vy,t.vx),dist=targetDist(t);
     if(dist>0.9){
