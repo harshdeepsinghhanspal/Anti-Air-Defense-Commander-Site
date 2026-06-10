@@ -66,7 +66,7 @@ html,body{
 .fire-inner{width:34px;height:42px;background:#cc0000;border:2px solid #f00;border-radius:3px;}
 .lock-body{background:#8B6914;border:2px solid #a88020;padding:4px 10px;font-size:11px;
   color:#ffe;font-weight:bold;text-align:center;}
-.sub-bar{background:#111;border:2px solid #333;padding:2px 6px;font-size:10px;color:#0f0;
+.sub-bar{background:#111;border:2px solid #333;padding:2px 5px;font-size:10px;color:#0f0;
   display:flex;justify-content:space-between;}
 </style>
 </head>
@@ -331,6 +331,8 @@ html,body{
 /* ═══════════════════════════════════════════════════════════════
    SKYSTRIKER-BRAVO AUDIO ENGINE
    All sounds use Web Audio API filtered noise synthesis.
+   NO sawtooth/sine tones for mechanical sounds — only shaped
+   band-pass/high-pass filtered white/pink noise with envelopes.
    ═══════════════════════════════════════════════════════════════ */
 const AudioCtx = (function() {
   let _ctx = null;
@@ -354,6 +356,7 @@ function makeNoiseBuffer(ctx, duration, type) {
   if (type === 'white') {
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   } else {
+    // Pink noise — Paul Kellet's algorithm
     let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
     for (let i = 0; i < len; i++) {
       const w = Math.random() * 2 - 1;
@@ -367,10 +370,13 @@ function makeNoiseBuffer(ctx, duration, type) {
   return buf;
 }
 
-// ── SFX 1: ANALOG TOGGLE SWITCH ──
+// ── SFX 1: ANALOG TOGGLE SWITCH (radar power switches + city mode) ──
+// Three-phase: sharp snap → low body thud → brief spring rattle
 function sfxToggleSwitch() {
   const ctx = AudioCtx.get(); if (!ctx) return;
   const t = ctx.currentTime;
+
+  // Phase 1 — sharp contact snap (high-pass white noise, very short)
   const s1 = ctx.createBufferSource();
   s1.buffer = makeNoiseBuffer(ctx, 0.018);
   const hp1 = ctx.createBiquadFilter(); hp1.type='highpass'; hp1.frequency.value=2400;
@@ -379,6 +385,8 @@ function sfxToggleSwitch() {
   g1.gain.exponentialRampToValueAtTime(0.001, t+0.016);
   s1.connect(hp1); hp1.connect(g1); g1.connect(ctx.destination);
   s1.start(t); s1.stop(t+0.02);
+
+  // Phase 2 — body thud (pink noise, band-pass ~260 Hz)
   const s2 = ctx.createBufferSource();
   s2.buffer = makeNoiseBuffer(ctx, 0.07, 'pink');
   const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=260; bp2.Q.value=2.0;
@@ -388,6 +396,8 @@ function sfxToggleSwitch() {
   g2.gain.exponentialRampToValueAtTime(0.001, t+0.060);
   s2.connect(bp2); bp2.connect(g2); g2.connect(ctx.destination);
   s2.start(t); s2.stop(t+0.075);
+
+  // Phase 3 — spring rattle tail (mid white noise, ~900 Hz, delayed)
   const s3 = ctx.createBufferSource();
   s3.buffer = makeNoiseBuffer(ctx, 0.030);
   const bp3 = ctx.createBiquadFilter(); bp3.type='bandpass'; bp3.frequency.value=900; bp3.Q.value=1.0;
@@ -398,10 +408,13 @@ function sfxToggleSwitch() {
   s3.start(t+0.010); s3.stop(t+0.04);
 }
 
-// ── SFX 2: HEAVY BUTTON ──
+// ── SFX 2: HEAVY BUTTON (LOCK / REARM / FIRE — CPU power button feel) ──
+// Four layers: deep thud + chassis ring + snap + return click
 function sfxHeavyButton() {
   const ctx = AudioCtx.get(); if (!ctx) return;
   const t = ctx.currentTime;
+
+  // Primary thud — very low pink noise
   const s1 = ctx.createBufferSource();
   s1.buffer = makeNoiseBuffer(ctx, 0.09, 'pink');
   const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=105; bp1.Q.value=1.6;
@@ -410,6 +423,8 @@ function sfxHeavyButton() {
   g1.gain.exponentialRampToValueAtTime(0.001, t+0.080);
   s1.connect(bp1); bp1.connect(g1); g1.connect(ctx.destination);
   s1.start(t); s1.stop(t+0.09);
+
+  // Chassis ring — tight bandpass ~1300 Hz, long tail
   const s2 = ctx.createBufferSource();
   s2.buffer = makeNoiseBuffer(ctx, 0.14);
   const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=1300; bp2.Q.value=7;
@@ -419,6 +434,8 @@ function sfxHeavyButton() {
   g2.gain.exponentialRampToValueAtTime(0.001, t+0.110);
   s2.connect(bp2); bp2.connect(g2); g2.connect(ctx.destination);
   s2.start(t); s2.stop(t+0.14);
+
+  // Contact snap — high-pass
   const s3 = ctx.createBufferSource();
   s3.buffer = makeNoiseBuffer(ctx, 0.013);
   const hp3 = ctx.createBiquadFilter(); hp3.type='highpass'; hp3.frequency.value=3800;
@@ -427,6 +444,8 @@ function sfxHeavyButton() {
   g3.gain.exponentialRampToValueAtTime(0.001, t+0.011);
   s3.connect(hp3); hp3.connect(g3); g3.connect(ctx.destination);
   s3.start(t); s3.stop(t+0.014);
+
+  // Return click at ~90ms (button travel end)
   const s4 = ctx.createBufferSource();
   s4.buffer = makeNoiseBuffer(ctx, 0.012);
   const bp4 = ctx.createBiquadFilter(); bp4.type='bandpass'; bp4.frequency.value=1700; bp4.Q.value=3.5;
@@ -437,10 +456,12 @@ function sfxHeavyButton() {
   s4.start(t+0.092); s4.stop(t+0.108);
 }
 
-// ── SFX 3: DVD VOLUME ROCKER ──
+// ── SFX 3: DVD VOLUME ROCKER (NARROW / STANDARD beam selector) ──
+// Soft hollow plastic tap — small mid-band burst, very brief
 function sfxRocker() {
   const ctx = AudioCtx.get(); if (!ctx) return;
   const t = ctx.currentTime;
+
   const s1 = ctx.createBufferSource();
   s1.buffer = makeNoiseBuffer(ctx, 0.030);
   const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=580; bp.Q.value=3.8;
@@ -450,6 +471,8 @@ function sfxRocker() {
   g1.gain.exponentialRampToValueAtTime(0.001, t+0.022);
   s1.connect(bp); bp.connect(lp); lp.connect(g1); g1.connect(ctx.destination);
   s1.start(t); s1.stop(t+0.030);
+
+  // Hollow cavity resonance at slightly lower freq
   const s2 = ctx.createBufferSource();
   s2.buffer = makeNoiseBuffer(ctx, 0.018);
   const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=380; bp2.Q.value=2.2;
@@ -460,189 +483,143 @@ function sfxRocker() {
   s2.start(t+0.010); s2.stop(t+0.030);
 }
 
-// ── SFX 4: PNEUMATIC HISS — single missile tube pressurisation ──
-// One hiss event = one missile rearmed. Call N times with staggered delay for N missiles.
-function sfxRearmOne(startDelay) {
+// ── SFX 4: PNEUMATIC HISS — missile rearm (bicycle tube gas leak) ──
+// Pink noise through bandpass, with LFO wobble on amplitude + slow pressure-drop decay
+let rearmSources = [];
+function sfxRearm() {
   const ctx = AudioCtx.get(); if (!ctx) return;
-  const t = ctx.currentTime + (startDelay || 0);
-  const dur = 0.55; // shorter per-tube burst — crisp pressurisation pop
+  // Stop any existing rearm sounds
+  rearmSources.forEach(s => { try { s.stop(); } catch(e){} });
+  rearmSources = [];
 
-  // Main hiss — tight bandpass ~1600 Hz, fast attack, pressure-drop tail
+  const t = ctx.currentTime;
+  const dur = 2.4;
+
+  // Main hiss layer — tight bandpass around ~1600 Hz (pressurised air hiss freq)
   const s1 = ctx.createBufferSource();
-  s1.buffer = makeNoiseBuffer(ctx, dur + 0.05, 'pink');
+  s1.buffer = makeNoiseBuffer(ctx, dur, 'pink');
   const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=1650; bp1.Q.value=0.65;
   const g1 = ctx.createGain();
   g1.gain.setValueAtTime(0.0, t);
-  g1.gain.linearRampToValueAtTime(0.38, t+0.025);
-  g1.gain.setValueAtTime(0.38, t+dur*0.55);
-  g1.gain.linearRampToValueAtTime(0.0, t+dur);
+  g1.gain.linearRampToValueAtTime(0.32, t+0.04);   // fast pressurize
+  g1.gain.setValueAtTime(0.32, t+dur-0.5);
+  g1.gain.linearRampToValueAtTime(0.0, t+dur);      // pressure drop
   s1.connect(bp1); bp1.connect(g1); g1.connect(ctx.destination);
-  s1.start(t); s1.stop(t+dur+0.06);
+  s1.start(t); s1.stop(t+dur+0.05);
+  rearmSources.push(s1);
 
-  // Low valve body resonance
+  // Low texture layer — rubber/valve body resonance (~600 Hz)
   const s2 = ctx.createBufferSource();
   s2.buffer = makeNoiseBuffer(ctx, dur, 'pink');
   const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=620; bp2.Q.value=1.3;
   const g2 = ctx.createGain();
   g2.gain.setValueAtTime(0.0, t);
-  g2.gain.linearRampToValueAtTime(0.16, t+0.03);
-  g2.gain.setValueAtTime(0.16, t+dur*0.5);
+  g2.gain.linearRampToValueAtTime(0.14, t+0.05);
+  g2.gain.setValueAtTime(0.14, t+dur-0.5);
   g2.gain.linearRampToValueAtTime(0.0, t+dur);
   s2.connect(bp2); bp2.connect(g2); g2.connect(ctx.destination);
-  s2.start(t); s2.stop(t+dur+0.06);
+  s2.start(t); s2.stop(t+dur+0.05);
+  rearmSources.push(s2);
 
-  // Opening valve click
+  // LFO amplitude wobble to simulate tube fluttering — using periodic gain modulation
+  // We approximate by playing multiple short bursts with slight level variation
+  // (Web Audio LFO on a GainNode controlling another GainNode)
+  const lfoOsc = ctx.createOscillator();
+  lfoOsc.frequency.value = 9;  // ~9 Hz flutter
+  const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.06;
+  lfoOsc.connect(lfoGain); lfoGain.connect(g1.gain);
+  lfoOsc.start(t); lfoOsc.stop(t+dur);
+  rearmSources.push(lfoOsc);
+
+  // Tiny metal valve click at the very start (opening valve)
   const sv = ctx.createBufferSource();
-  sv.buffer = makeNoiseBuffer(ctx, 0.014);
+  sv.buffer = makeNoiseBuffer(ctx, 0.015);
   const bpv = ctx.createBiquadFilter(); bpv.type='bandpass'; bpv.frequency.value=2200; bpv.Q.value=4;
   const gv = ctx.createGain();
-  gv.gain.setValueAtTime(0.22, t+0.008);
-  gv.gain.exponentialRampToValueAtTime(0.001, t+0.022);
+  gv.gain.setValueAtTime(0.18, t+0.01);
+  gv.gain.exponentialRampToValueAtTime(0.001, t+0.025);
   sv.connect(bpv); bpv.connect(gv); gv.connect(ctx.destination);
-  sv.start(t+0.008); sv.stop(t+0.03);
-
-  // Closing click at end
-  const se = ctx.createBufferSource();
-  se.buffer = makeNoiseBuffer(ctx, 0.012);
-  const bpe = ctx.createBiquadFilter(); bpe.type='bandpass'; bpe.frequency.value=1800; bpe.Q.value=5;
-  const ge = ctx.createGain();
-  ge.gain.setValueAtTime(0.14, t+dur-0.02);
-  ge.gain.exponentialRampToValueAtTime(0.001, t+dur+0.01);
-  se.connect(bpe); bpe.connect(ge); ge.connect(ctx.destination);
-  se.start(t+dur-0.02); se.stop(t+dur+0.015);
+  sv.start(t+0.01); sv.stop(t+0.03);
 }
 
-// ── SFX 5: LOCK ACQUIRED — 3 beeps, louder, more spaced ──
+// ── SFX 5: LOCK ACQUIRED — 3 short beeps ──
+// Tight bandpass on white noise gives a "radio beep" texture
+// Not pure tone — has a slightly buzzy electronic character
 function sfxLockBeep() {
   const ctx = AudioCtx.get(); if (!ctx) return;
   const t = ctx.currentTime;
-  const spacing = 0.22; // more deliberate spacing between beeps
-  const dur = 0.080;
 
   for (let i = 0; i < 3; i++) {
-    const bt = t + i * spacing;
+    const bt = t + i * 0.15;
+    const dur = 0.068;
     const s = ctx.createBufferSource();
     s.buffer = makeNoiseBuffer(ctx, dur);
-    // Tight bandpass — radio beep texture, not pure tone
+    // Very tight bandpass at 880 Hz — sounds like a beep but with radio texture
     const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=880; bp.Q.value=28;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0, bt);
-    g.gain.linearRampToValueAtTime(0.55, bt+0.008); // louder than before (was 0.35)
-    g.gain.setValueAtTime(0.55, bt+dur-0.020);
+    g.gain.linearRampToValueAtTime(0.35, bt+0.007);
+    g.gain.setValueAtTime(0.35, bt+dur-0.018);
     g.gain.linearRampToValueAtTime(0.0, bt+dur);
     s.connect(bp); bp.connect(g); g.connect(ctx.destination);
     s.start(bt); s.stop(bt+dur+0.01);
-
-    // Second harmonic layer at 1760 Hz (one octave up) for crispness
-    const s2 = ctx.createBufferSource();
-    s2.buffer = makeNoiseBuffer(ctx, dur);
-    const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=1760; bp2.Q.value=18;
-    const g2 = ctx.createGain();
-    g2.gain.setValueAtTime(0.0, bt);
-    g2.gain.linearRampToValueAtTime(0.18, bt+0.008);
-    g2.gain.setValueAtTime(0.18, bt+dur-0.020);
-    g2.gain.linearRampToValueAtTime(0.0, bt+dur);
-    s2.connect(bp2); bp2.connect(g2); g2.connect(ctx.destination);
-    s2.start(bt); s2.stop(bt+dur+0.01);
   }
 }
 
-// ── SFX 6: MISSILE LAUNCH — raw tube ejection + long burn whoosh ──
-// Goal: authentic, mechanical — tube gas expansion → sustained exhaust roar → high trail fade
-// No sine/sawtooth anywhere. All noise-based.
+// ── SFX 6: MISSILE LAUNCH — whoosh from tube ──
+// 4-layer design: tube thump → exhaust sweep (low→high bandpass) → whistle tail → metal clink
 function sfxMissileLaunch() {
   const ctx = AudioCtx.get(); if (!ctx) return;
   const t = ctx.currentTime;
 
-  // Layer 1 — ignition crack: very sharp high-pass burst (propellant ignition transient)
-  const s0 = ctx.createBufferSource();
-  s0.buffer = makeNoiseBuffer(ctx, 0.022);
-  const hp0 = ctx.createBiquadFilter(); hp0.type='highpass'; hp0.frequency.value=5000;
-  const g0 = ctx.createGain();
-  g0.gain.setValueAtTime(0.55, t);
-  g0.gain.exponentialRampToValueAtTime(0.001, t+0.018);
-  s0.connect(hp0); hp0.connect(g0); g0.connect(ctx.destination);
-  s0.start(t); s0.stop(t+0.025);
-
-  // Layer 2 — tube body shock: deep pink noise thump (gas pressure slap inside tube)
+  // Layer 1 — initial tube ejection thump (very low freq, pink noise)
   const s1 = ctx.createBufferSource();
-  s1.buffer = makeNoiseBuffer(ctx, 0.12, 'pink');
-  const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=65; bp1.Q.value=0.7;
+  s1.buffer = makeNoiseBuffer(ctx, 0.065, 'pink');
+  const bp1 = ctx.createBiquadFilter(); bp1.type='bandpass'; bp1.frequency.value=75; bp1.Q.value=0.8;
   const g1 = ctx.createGain();
-  g1.gain.setValueAtTime(0.85, t+0.002);
-  g1.gain.exponentialRampToValueAtTime(0.001, t+0.110);
+  g1.gain.setValueAtTime(0.72, t);
+  g1.gain.exponentialRampToValueAtTime(0.001, t+0.060);
   s1.connect(bp1); bp1.connect(g1); g1.connect(ctx.destination);
-  s1.start(t); s1.stop(t+0.13);
+  s1.start(t); s1.stop(t+0.07);
 
-  // Layer 3 — metal tube ring (high-Q bandpass, medium freq, structural resonance)
-  const s1b = ctx.createBufferSource();
-  s1b.buffer = makeNoiseBuffer(ctx, 0.18);
-  const bp1b = ctx.createBiquadFilter(); bp1b.type='bandpass'; bp1b.frequency.value=420; bp1b.Q.value=9;
-  const g1b = ctx.createGain();
-  g1b.gain.setValueAtTime(0.0, t);
-  g1b.gain.linearRampToValueAtTime(0.30, t+0.003);
-  g1b.gain.exponentialRampToValueAtTime(0.001, t+0.160);
-  s1b.connect(bp1b); bp1b.connect(g1b); g1b.connect(ctx.destination);
-  s1b.start(t); s1b.stop(t+0.19);
-
-  // Layer 4 — main exhaust roar: pink noise, wide bandpass sweeping low→mid
-  // Long duration — missile still burning as it clears the tube
-  const dur4 = 1.20;
+  // Layer 2 — main exhaust whoosh: pink noise, bandpass freq sweeps 180 Hz → 3400 Hz
+  const dur2 = 0.60;
   const s2 = ctx.createBufferSource();
-  s2.buffer = makeNoiseBuffer(ctx, dur4, 'pink');
-  const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.Q.value=0.45;
-  bp2.frequency.setValueAtTime(120, t+0.010);
-  bp2.frequency.exponentialRampToValueAtTime(2200, t+0.55);
-  bp2.frequency.exponentialRampToValueAtTime(4800, t+dur4);
+  s2.buffer = makeNoiseBuffer(ctx, dur2, 'pink');
+  const bp2 = ctx.createBiquadFilter(); bp2.type='bandpass'; bp2.Q.value=0.55;
+  bp2.frequency.setValueAtTime(180, t+0.008);
+  bp2.frequency.exponentialRampToValueAtTime(3400, t+0.45);
   const g2 = ctx.createGain();
   g2.gain.setValueAtTime(0.0, t);
-  g2.gain.linearRampToValueAtTime(0.62, t+0.018);
-  g2.gain.setValueAtTime(0.62, t+0.10);
-  g2.gain.exponentialRampToValueAtTime(0.12, t+0.70);
-  g2.gain.exponentialRampToValueAtTime(0.001, t+dur4);
+  g2.gain.linearRampToValueAtTime(0.50, t+0.014);
+  g2.gain.setValueAtTime(0.50, t+0.06);
+  g2.gain.exponentialRampToValueAtTime(0.001, t+dur2);
   s2.connect(bp2); bp2.connect(g2); g2.connect(ctx.destination);
-  s2.start(t+0.010); s2.stop(t+dur4+0.02);
+  s2.start(t+0.008); s2.stop(t+dur2+0.01);
 
-  // Layer 5 — mid exhaust texture: second pink noise channel, slightly offset freq
-  const dur5 = 0.90;
+  // Layer 3 — high whistle tail (narrow BP sweeping 3800→6000 Hz)
+  const dur3 = 0.48;
   const s3 = ctx.createBufferSource();
-  s3.buffer = makeNoiseBuffer(ctx, dur5, 'pink');
-  const bp3 = ctx.createBiquadFilter(); bp3.type='bandpass'; bp3.Q.value=0.60;
-  bp3.frequency.setValueAtTime(200, t+0.012);
-  bp3.frequency.exponentialRampToValueAtTime(1400, t+0.50);
+  s3.buffer = makeNoiseBuffer(ctx, dur3);
+  const bp3 = ctx.createBiquadFilter(); bp3.type='bandpass'; bp3.Q.value=5;
+  bp3.frequency.setValueAtTime(3800, t+0.09);
+  bp3.frequency.exponentialRampToValueAtTime(6200, t+0.46);
   const g3 = ctx.createGain();
-  g3.gain.setValueAtTime(0.0, t);
-  g3.gain.linearRampToValueAtTime(0.38, t+0.020);
-  g3.gain.exponentialRampToValueAtTime(0.001, t+dur5);
+  g3.gain.setValueAtTime(0.0, t+0.09);
+  g3.gain.linearRampToValueAtTime(0.20, t+0.14);
+  g3.gain.exponentialRampToValueAtTime(0.001, t+0.50);
   s3.connect(bp3); bp3.connect(g3); g3.connect(ctx.destination);
-  s3.start(t+0.012); s3.stop(t+dur5+0.02);
+  s3.start(t+0.09); s3.stop(t+0.52);
 
-  // Layer 6 — high whistle trail: narrow BP sweeping 3500→7500 Hz, long fade
-  const dur6 = 1.10;
+  // Layer 4 — metallic tube mechanism clink at launch start
   const s4 = ctx.createBufferSource();
-  s4.buffer = makeNoiseBuffer(ctx, dur6);
-  const bp4 = ctx.createBiquadFilter(); bp4.type='bandpass'; bp4.Q.value=6;
-  bp4.frequency.setValueAtTime(3500, t+0.08);
-  bp4.frequency.exponentialRampToValueAtTime(7500, t+dur6);
+  s4.buffer = makeNoiseBuffer(ctx, 0.018);
+  const hp4 = ctx.createBiquadFilter(); hp4.type='highpass'; hp4.frequency.value=4200;
   const g4 = ctx.createGain();
-  g4.gain.setValueAtTime(0.0, t+0.08);
-  g4.gain.linearRampToValueAtTime(0.26, t+0.14);
-  g4.gain.exponentialRampToValueAtTime(0.001, t+dur6);
-  s4.connect(bp4); bp4.connect(g4); g4.connect(ctx.destination);
-  s4.start(t+0.08); s4.stop(t+dur6+0.02);
-
-  // Layer 7 — air turbulence trail (white noise, high-pass, long slow fade)
-  const dur7 = 1.40;
-  const s5 = ctx.createBufferSource();
-  s5.buffer = makeNoiseBuffer(ctx, dur7);
-  const hp5 = ctx.createBiquadFilter(); hp5.type='highpass'; hp5.frequency.value=2800;
-  const lp5 = ctx.createBiquadFilter(); lp5.type='lowpass'; lp5.frequency.value=9000;
-  const g5 = ctx.createGain();
-  g5.gain.setValueAtTime(0.0, t+0.05);
-  g5.gain.linearRampToValueAtTime(0.18, t+0.12);
-  g5.gain.exponentialRampToValueAtTime(0.001, t+dur7);
-  s5.connect(hp5); hp5.connect(lp5); lp5.connect(g5); g5.connect(ctx.destination);
-  s5.start(t+0.05); s5.stop(t+dur7+0.02);
+  g4.gain.setValueAtTime(0.26, t);
+  g4.gain.exponentialRampToValueAtTime(0.001, t+0.016);
+  s4.connect(hp4); hp4.connect(g4); g4.connect(ctx.destination);
+  s4.start(t); s4.stop(t+0.020);
 }
 
 /* ── FULLSCREEN ── */
@@ -696,7 +673,12 @@ applyScale();
 
 /* ════════════════════════════════
    COORDINATE SYSTEM
-   0° = North = top of EWR screen
+   ─────────────────────────────
+   All bearings use COMPASS convention:
+     0° = North = top of EWR screen
+     90° = East = right of EWR screen
+     180° = South = bottom of EWR screen
+     270° = West = left of EWR screen
 ════════════════════════════════ */
 
 const S={
@@ -755,7 +737,7 @@ function liveTargets(){return TARGETS.filter(t=>!S.destroyedIds.has(t.id));}
 
 /* ── CONTROLS ── */
 function toggleSw(w){
-  sfxToggleSwitch();
+  sfxToggleSwitch();  // ← analog switch sound
   S[w+'On']=!S[w+'On'];let on=S[w+'On'];
   document.getElementById(w+'-knob').className='knob '+(on?'on':'off');
   document.getElementById(w+'-off').style.visibility=on?'hidden':'visible';
@@ -764,33 +746,19 @@ function toggleSw(w){
   updateStatus();
 }
 function setBeam(m){
-  sfxRocker();
+  sfxRocker();  // ← DVD rocker sound
   S.beam=m;
   document.getElementById('bn').className='bdot'+(m==='narrow'?' sel':'');
   document.getElementById('bs').className='bdot'+(m==='standard'?' sel':'');
   document.getElementById('beam-lbl').textContent='BEAM:'+(m==='narrow'?'NARW':'STND');
 }
 function useMissile(i){S.missiles[i]=!S.missiles[i];updateGrid();}
-
 function rearm(){
-  // Count how many missiles are currently expended (need rearming)
-  const expended = S.missiles.filter(m => !m).length;
-  if(expended === 0){
-    flash('AGNIBAAN ALREADY AT FULL LOAD — 8/8 READY');
-    return; // nothing to rearm, no sound
-  }
-  sfxHeavyButton();
-  S.missiles=[true,true,true,true,true,true,true,true];
-  updateGrid();
-  flash('AGNIBAAN REARMED — '+expended+' TUBE'+(expended>1?'S':'')+' PRESSURISED');
-  // Play one hiss per rearmed missile, staggered
-  const gapBetween = 0.30; // 300ms between each tube pressurisation
-  for(let i = 0; i < expended; i++){
-    const delay = 0.10 + i * gapBetween; // first one at 100ms after button, then spaced
-    sfxRearmOne(delay);
-  }
+  sfxHeavyButton();   // ← heavy button sound
+  S.missiles=[true,true,true,true,true,true,true,true];updateGrid();
+  setTimeout(()=>sfxRearm(), 80);  // ← pneumatic hiss after button press
+  flash('AGNIBAAN REARMED — 8 MISSILES READY');
 }
-
 function updateGrid(){
   let cells=document.querySelectorAll('#mg .mc'),n=0;
   cells.forEach((c,i)=>{c.className='mc'+(S.missiles[i]?'':' used');if(S.missiles[i])n++;});
@@ -807,15 +775,16 @@ function checkAlign(){
   return null;
 }
 
+let _lastLockState = false;
 function toggleLock(){
-  sfxHeavyButton();
+  sfxHeavyButton();   // ← heavy button click
   if(!S.tarOn){flash('TAR OFFLINE — CANNOT LOCK');return;}
   if(!S.ewrOn){flash('EWR OFFLINE — CANNOT LOCK');return;}
   if(!S.locked){
     let t=checkAlign();
     if(!t){flash('LOCK FAILED — ALIGN TAR AND ALT ON SAME TARGET');return;}
     S.locked=true;S.lockTarget=t;
-    setTimeout(()=>sfxLockBeep(), 120);
+    setTimeout(()=>sfxLockBeep(), 120);  // ← 3 beeps on lock confirmed
   }else{S.locked=false;S.lockTarget=null;}
   applyLockUI();updateStatus();
 }
@@ -833,8 +802,8 @@ function fireMissile(){
   let idx=S.missiles.findIndex(m=>m);
   if(idx===-1){flash('NO MISSILES — REARM REQUIRED');return;}
   S.missiles[idx]=false;updateGrid();
-  sfxHeavyButton();
-  setTimeout(()=>sfxMissileLaunch(), 55);
+  sfxHeavyButton();          // ← button press
+  setTimeout(()=>sfxMissileLaunch(), 60);  // ← whoosh after press
   let fg=document.getElementById('fg');
   fg.style.transform='scale(0.9)';fg.style.background='#f00';
   setTimeout(()=>{fg.style.transform='';fg.style.background='#8B0000';},200);
@@ -844,7 +813,7 @@ function fireMissile(){
 }
 function flash(m){document.getElementById('sbar').textContent=m;}
 function toggleCityMode(){
-  sfxToggleSwitch();
+  sfxToggleSwitch();  // ← analog switch sound for mode button too
   S.showCities=!S.showCities;
   document.getElementById('mode-btn').textContent='MODE: CITIES '+(S.showCities?'ON':'OFF');
   document.getElementById('mode-btn').style.borderColor=S.showCities?'#0a4':'#555';
@@ -1260,6 +1229,7 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>{S.keys[e.key]=false;});
 
+// Resume audio context on first user interaction (mobile policy)
 document.addEventListener('click', ()=>{ AudioCtx.get(); }, {once: true});
 document.addEventListener('touchstart', ()=>{ AudioCtx.get(); }, {once: true});
 
